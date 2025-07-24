@@ -82,8 +82,89 @@ const Checkout = () => {
           <h1 className="text-3xl font-bold">Checkout</h1>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left Column - Form */}
+        <div className="grid lg:grid-cols-2 gap-10">
+          <div className="space-y-6">
+            {/* Cart Items */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Package className="w-5 h-5" />
+                  Order Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {items.map((item) => (
+                  <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                      <img 
+                        src={item.image} 
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <Badge variant="outline" className="text-xs mb-1 bg-gradient-brand text-primary-foreground">
+                        {item.category}
+                      </Badge>
+                      <h4 className="font-semibold text-sm mb-2">{item.title}</h4>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          Qty: {item.quantity}
+                        </span>
+                        <span className="font-medium">
+                          ${(parseFloat(item.price.replace('From: $', '')) * item.quantity).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          {/* Shipping Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping & Collection Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex justify-between text-sm">
+                  <span>Total Items:</span>
+                  <span>{getTotalItems()}</span>
+                </div>
+                
+                <p className="text-sm text-muted-foreground italic">
+                  *Chargers and cables will be included with the order.
+                </p>
+                
+                <div className="space-y-3 pt-4 border-t">
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Shipping Cost:</span>
+                    </div>
+                    <p className="text-sm text-primary">
+                      Enter ZIP code for USA to Calculate Shipping Cost
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="font-medium">Collection / Return Cost:</span>
+                    </div>
+                    <p className="text-sm text-primary">
+                      Enter ZIP code for USA to Calculate Collection Cost
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total Amount (Including Shipping & Collection):</span>
+                    <span className="text-primary">${getTotalPrice().toFixed(2)}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+          </div>
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -238,7 +319,7 @@ const Checkout = () => {
                       )}
                     />
 
-                    <Button type="submit" className="w-full h-12 text-base">
+                    <Button type="submit" className="w-full h-12 text-base bg-gradient-brand text-primary-foreground">
                       Proceed to Payment
                     </Button>
                   </form>
@@ -247,89 +328,7 @@ const Checkout = () => {
             </Card>
           </div>
 
-          {/* Right Column - Order Summary */}
-          <div className="space-y-6">
-            {/* Cart Items */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5" />
-                  Order Summary
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
-                    <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <img 
-                        src={item.image} 
-                        alt={item.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Badge variant="outline" className="text-xs mb-1">
-                        {item.category}
-                      </Badge>
-                      <h4 className="font-semibold text-sm mb-2">{item.title}</h4>
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm text-muted-foreground">
-                          Qty: {item.quantity}
-                        </span>
-                        <span className="font-medium">
-                          £{(parseFloat(item.price.replace('From: £', '')) * item.quantity).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
 
-            {/* Shipping Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Shipping & Collection Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span>Total Items:</span>
-                  <span>{getTotalItems()}</span>
-                </div>
-                
-                <p className="text-sm text-muted-foreground italic">
-                  *Chargers and cables will be included with the order.
-                </p>
-                
-                <div className="space-y-3 pt-4 border-t">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Shipping Cost:</span>
-                    </div>
-                    <p className="text-sm text-primary">
-                      Enter ZIP code for USA to Calculate Shipping Cost
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Collection / Return Cost:</span>
-                    </div>
-                    <p className="text-sm text-primary">
-                      Enter ZIP code for USA to Calculate Collection Cost
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total Amount (Including Shipping & Collection):</span>
-                    <span className="text-primary">£{getTotalPrice().toFixed(2)}</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </div>
     </div>

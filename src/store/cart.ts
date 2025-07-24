@@ -66,7 +66,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   
   getTotalPrice: () => {
     return get().items.reduce((total, item) => {
-      const price = parseFloat(item.price.replace('From: £', ''));
+      const price = parseFloat(item.price.replace('From: $', ''));
       return total + (price * item.quantity);
     }, 0);
   },

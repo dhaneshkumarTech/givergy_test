@@ -18,7 +18,7 @@ const CartPopup = () => {
 
   return (
     <Sheet open={isOpen} onOpenChange={closeCart}>
-      <SheetContent className="w-[400px] sm:w-[540px]">
+      <SheetContent className="w-[400px] sm:w-[540px] p-8" >
         <SheetHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-xl font-bold">Shopping Cart</SheetTitle>
@@ -31,7 +31,7 @@ const CartPopup = () => {
         <div className="flex flex-col h-full">
           {items.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full flex items-center justify-center">
                 <ShoppingCart className="w-12 h-12 text-muted-foreground" />
               </div>
               <div>
@@ -46,7 +46,7 @@ const CartPopup = () => {
                   <Card key={item.id} className="group">
                     <CardContent className="p-4">
                       <div className="flex gap-4">
-                        <div className="w-16 h-16 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                           <img 
                             src={item.image} 
                             alt={item.title}
@@ -57,7 +57,7 @@ const CartPopup = () => {
                         <div className="flex-1 space-y-2">
                           <div className="flex items-start justify-between">
                             <div>
-                              <Badge variant="outline" className="text-xs mb-1">
+                              <Badge variant="outline" className="text-xs mb-1 bg-gradient-brand text-primary-foreground">
                                 {item.category}
                               </Badge>
                               <h4 className="font-semibold text-sm leading-tight">
@@ -99,7 +99,7 @@ const CartPopup = () => {
                             
                             <div className="text-right">
                               <p className="font-bold text-primary">
-                                £{(parseFloat(item.price.replace('From: £', '')) * item.quantity).toFixed(2)}
+                                ${(parseFloat(item.price.replace('From: $', '')) * item.quantity).toFixed(2)}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {item.price} each
@@ -116,11 +116,11 @@ const CartPopup = () => {
               <div className="border-t pt-4 space-y-4">
                 <div className="flex items-center justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">£{getTotalPrice().toFixed(2)}</span>
+                  <span className="text-primary">${getTotalPrice().toFixed(2)}</span>
                 </div>
                 
                 <Button 
-                  className="w-full h-12 text-base"
+                  className="w-full h-12 bg-gradient-brand text-primary-foreground"
                   onClick={handleCheckout}
                   disabled={items.length === 0}
                 >

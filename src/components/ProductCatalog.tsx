@@ -32,22 +32,22 @@ const ProductCatalog = () => {
   const bundles = [
     {
       id: 1,
-      title: "iPad 10.2 7-inch WiFi AND STAND READER",
-      description: "iPad 10.2 7-inch WiFi with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
-      features: ["iPad 10.2 7-inch WiFi", "Related 4-5ft provided with carry case"],
-      price: "From: £59.75",
-      availability: "Check Availability",
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      title: "iPad 10.2 7th Gen WiFi and Stand Reader",
+      description: "iPad 10.2 7th gen WiFi with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
+      features: ["iPad 10.2 7th gen WiFi", "Related 4-5ft provided with carry case"],
+      price: "From: $59.75",
+      availability: " Quantity",
+      image: "/lovable-uploads/Apple_Thunderbolt_Display.webp",
       category: "Bundle"
     },
     {
       id: 2,
-      title: "iPad 10.2 7-inch CELLULAR AND STAND READER", 
-      description: "iPad 10.2 7-inch Cellular with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
-      features: ["iPad 10.2 7-inch Cellular", "Related 4-5ft provided with carry case"],
-      price: "From: £69.75",
-      availability: "Check Availability", 
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      title: "iPad 10.2 7th Gen Cellular and Stand Reader", 
+      description: "iPad 10.2 7th gen Cellular with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
+      features: ["iPad 10.2 7th gen Cellular", "Related 4-5ft provided with carry case"],
+      price: "From: $69.75",
+      availability: "Quantity", 
+      image: "/lovable-uploads/Samsung_85_4K_Display.webp",
       category: "Bundle"
     }
   ];
@@ -55,47 +55,47 @@ const ProductCatalog = () => {
   const products = [
     {
       id: 3,
-      title: "iPad 10.2 7-inch WiFi",
+      title: "iPad 10.2 7th Gen WiFi",
       description: "10.2 Retina display with fully anti-glare screen. Custom case registration and charging stands.",
-      price: "From: £39.75",
-      availability: "Check Availability",
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      price: "From: $39.75",
+      availability: "Quantity",
+      image: "/lovable-uploads/iPad_Pro_12.9_Wi-Fi.webp",
       category: "iPad"
     },
     {
       id: 4,
-      title: "iPad 10.2 7-inch CELLULAR",
+      title: "iPad 10.2 7th Gen Cellular",
       description: "10.2 Retina display with fully anti-glare screen. Custom case registration and charging stands.",
-      price: "From: £49.75", 
-      availability: "Check Availability",
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      price: "From: $49.75", 
+      availability: "Quantity",
+      image: "/lovable-uploads/iPad_Pro_12.9_Wi-Fi.webp",
       category: "iPad"
     },
     {
       id: 5,
-      title: "SMARTPHONE",
+      title: "Smartphone",
       description: "Simple mobile cards reader and register also provided with custom covers and charging stations.",
-      price: "From: £29.75",
-      availability: "Check Availability", 
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      price: "From: $29.75",
+      availability: "Quantity", 
+      image: "/lovable-uploads/iPhone_14_Pro_Max.webp",
       category: "Mobile"
     },
     {
       id: 6,
-      title: "WINDOWS INTEL DESKTOP",
+      title: "Window Intel Desktop",
       description: "Windows 10 Intel system provided with changing/power stations.",
-      price: "From: £89.75",
-      availability: "Check Availability",
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png", 
+      price: "From: $89.75",
+      availability: "Quantity",
+      image: "/lovable-uploads/HP_Laptop.webp", 
       category: "Desktop"
     },
     {
       id: 7,
-      title: "APPLE/MAC LAPTOPS",
+      title: "Apple/MacBook Laptop",
       description: "Business connection for events, leisure, and various catering stations.",
-      price: "From: £79.75",
-      availability: "Check Availability",
-      image: "/lovable-uploads/eb59e792-64fe-4943-b338-de6dab0a3c9c.png",
+      price: "From: $79.75",
+      availability: "Quantity",
+      image: "/lovable-uploads/MacBook_Pro_16_M1.webp",
       category: "Laptop"
     }
   ];
@@ -119,23 +119,23 @@ const ProductCatalog = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {bundles.map((bundle) => (
-              <Card key={bundle.id} className="group hover:shadow-elegant transition-all duration-300 border hover:border-primary/20 overflow-hidden">
+              <Card key={bundle.id} className="group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
                 <CardContent className="p-0">
                   {/* Product Image */}
-                  <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
+                  <div className="relative h-60 from-muted to-muted/50">
                     <img 
                       src={bundle.image} 
                       alt={bundle.title}
                       className="w-full h-full object-contain p-8"
                     />
-                    <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
+                    <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
                       {bundle.category}
                     </Badge>
                   </div>
                   
                   {/* Content */}
                   <div className="p-6">
-                    <h3 className="font-bold text-xl mb-3 text-primary group-hover:text-primary/80 transition-colors">
+                    <h3 className="font-bold text-lg text-center mb-2 transition-colors">
                       {bundle.title}
                     </h3>
                     
@@ -154,8 +154,8 @@ const ProductCatalog = () => {
                     
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="font-bold text-xl text-primary">{bundle.price}</p>
-                        <p className="text-sm text-muted-foreground">{bundle.availability}</p>
+                        <p className="text-sm mb-1">{bundle.price}</p>
+                        <p className="text-sm text-muted-foreground mb-4">{bundle.availability}</p>
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -182,8 +182,8 @@ const ProductCatalog = () => {
                     </div>
                     
                     <Button 
-                      variant="default" 
-                      className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                      variant="outline" 
+                      className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground transition-all"
                       onClick={() => handleAddToCart(bundle)}
                     >
                       <ShoppingCart className="w-4 h-4" />
@@ -212,18 +212,18 @@ const ProductCatalog = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
               return (
-                <Card key={product.id} className="group hover:shadow-elegant transition-all duration-300 border hover:border-primary/20">
+                <Card key={product.id} className="group transition-all duration-300 border hover:border-primary/80">
                   <CardContent className="p-6">
                     <div className="text-center mb-6">
-                      <div className="w-24 h-24 bg-muted rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden group-hover:shadow-glow transition-all duration-300">
+                      <div className="w-32 h-32 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden transition-all duration-300">
                         <img 
                           src={product.image} 
                           alt={product.title}
                           className="w-full h-full object-cover rounded-xl"
                         />
                       </div>
-                      <Badge variant="outline" className="mb-2">{product.category}</Badge>
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
+                      <Badge variant="outline" className="mb-2 bg-gradient-brand text-primary-foreground">{product.category}</Badge>
+                      <h3 className="font-bold text-lg mb-2 transition-colors">
                         {product.title}
                       </h3>
                     </div>
@@ -234,7 +234,7 @@ const ProductCatalog = () => {
                     
                     <div className="text-center border-t pt-4 space-y-4">
                       <div>
-                        <p className="font-bold text-lg text-primary mb-1">{product.price}</p>
+                        <p className="text-sm mb-1">{product.price}</p>
                         <p className="text-sm text-muted-foreground mb-4">{product.availability}</p>
                       </div>
                       
@@ -262,7 +262,7 @@ const ProductCatalog = () => {
                       
                       <Button 
                         variant="outline" 
-                        className="w-full gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                        className="w-full gap-2 group-hover:bg-gradient-brand hover:text-primary-foreground group-hover:text-primary-foreground transition-all"
                         onClick={() => handleAddToCart(product)}
                       >
                         <ShoppingCart className="w-4 h-4" />
