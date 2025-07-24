@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CalendarIcon, CheckCircle, Truck, Clock } from "lucide-react";
+import CartButton from "@/components/CartButton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
@@ -17,7 +18,10 @@ const RentalInquiry = () => {
     <div className="min-h-screen bg-gradient-subtle py-12 px-4">
       <div className="max-w-4xl mx-auto">
         {/* Header Section */}
-        <div className="text-center mb-12">
+        <div className="text-center mb-12 relative">
+          <div className="absolute top-0 right-0">
+            <CartButton />
+          </div>
           <div className="flex items-center justify-center gap-4 mb-8">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow">

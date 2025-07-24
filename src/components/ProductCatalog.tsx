@@ -1,10 +1,34 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Package, Tablet, Laptop, Monitor } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { useCartStore } from "@/store/cart";
+import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus } from "lucide-react";
 
 const ProductCatalog = () => {
+  const { addItem } = useCartStore();
+  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+
+  const getQuantity = (id: number) => quantities[id] || 1;
+  
+  const updateQuantity = (id: number, quantity: number) => {
+    setQuantities(prev => ({
+      ...prev,
+      [id]: Math.max(1, quantity)
+    }));
+  };
+
+  const handleAddToCart = (item: any) => {
+    const quantity = getQuantity(item.id);
+    addItem({
+      id: item.id,
+      title: item.title,
+      price: item.price,
+      image: item.image,
+      category: item.category
+    }, quantity);
+  };
   const bundles = [
     {
       id: 1,
@@ -95,43 +119,73 @@ const ProductCatalog = () => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {bundles.map((bundle) => (
-              <Card key={bundle.id} className="group hover:shadow-elegant transition-all duration-300 border-2 hover:border-primary/20">
-                <CardContent className="p-6">
-                  <div className="flex gap-4 mb-4">
-                    <div className="w-20 h-20 bg-muted rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
-                      <img 
-                        src={bundle.image} 
-                        alt={bundle.title}
-                        className="w-full h-full object-cover rounded-lg"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <Badge variant="secondary" className="mb-2">{bundle.category}</Badge>
-                      <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">
-                        {bundle.title}
-                      </h3>
-                    </div>
+              <Card key={bundle.id} className="group hover:shadow-elegant transition-all duration-300 border hover:border-primary/20 overflow-hidden">
+                <CardContent className="p-0">
+                  {/* Product Image */}
+                  <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50">
+                    <img 
+                      src={bundle.image} 
+                      alt={bundle.title}
+                      className="w-full h-full object-contain p-8"
+                    />
+                    <Badge className="absolute top-4 left-4 bg-primary text-primary-foreground">
+                      {bundle.category}
+                    </Badge>
                   </div>
                   
-                  <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                    {bundle.description}
-                  </p>
-                  
-                  <div className="space-y-2 mb-6">
-                    {bundle.features.map((feature, index) => (
-                      <div key={index} className="flex items-center gap-2 text-sm">
-                        <div className="w-1.5 h-1.5 bg-primary rounded-full"></div>
-                        <span>{feature}</span>
+                  {/* Content */}
+                  <div className="p-6">
+                    <h3 className="font-bold text-xl mb-3 text-primary group-hover:text-primary/80 transition-colors">
+                      {bundle.title}
+                    </h3>
+                    
+                    <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
+                      {bundle.description}
+                    </p>
+                    
+                    <div className="space-y-2 mb-6">
+                      {bundle.features.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-2 text-sm">
+                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
+                          <span>{feature}</span>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <p className="font-bold text-xl text-primary">{bundle.price}</p>
+                        <p className="text-sm text-muted-foreground">{bundle.availability}</p>
                       </div>
-                    ))}
-                  </div>
-                  
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div>
-                      <p className="font-bold text-lg text-primary">{bundle.price}</p>
-                      <p className="text-sm text-muted-foreground">{bundle.availability}</p>
+                      
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id) - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">
+                          {getQuantity(bundle.id)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id) + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
                     </div>
-                    <Button variant="gradient" className="gap-2">
+                    
+                    <Button 
+                      variant="default" 
+                      className="w-full gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70"
+                      onClick={() => handleAddToCart(bundle)}
+                    >
                       <ShoppingCart className="w-4 h-4" />
                       Add to Cart
                     </Button>
@@ -178,10 +232,39 @@ const ProductCatalog = () => {
                       {product.description}
                     </p>
                     
-                    <div className="text-center border-t pt-4">
-                      <p className="font-bold text-lg text-primary mb-1">{product.price}</p>
-                      <p className="text-sm text-muted-foreground mb-4">{product.availability}</p>
-                      <Button variant="outline" className="w-full gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    <div className="text-center border-t pt-4 space-y-4">
+                      <div>
+                        <p className="font-bold text-lg text-primary mb-1">{product.price}</p>
+                        <p className="text-sm text-muted-foreground mb-4">{product.availability}</p>
+                      </div>
+                      
+                      <div className="flex items-center justify-center gap-2 mb-4">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
+                        >
+                          <Minus className="w-3 h-3" />
+                        </Button>
+                        <span className="w-8 text-center font-medium">
+                          {getQuantity(product.id)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
+                        >
+                          <Plus className="w-3 h-3" />
+                        </Button>
+                      </div>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="w-full gap-2 group-hover:bg-primary group-hover:text-primary-foreground transition-all"
+                        onClick={() => handleAddToCart(product)}
+                      >
                         <ShoppingCart className="w-4 h-4" />
                         Add to Cart
                       </Button>
@@ -190,6 +273,41 @@ const ProductCatalog = () => {
                 </Card>
               );
             })}
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div className="mt-24">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <Award className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Certified Partner</h3>
+              <p className="text-muted-foreground text-sm">
+                Trusted B Corporation partnership ensuring quality and reliability
+              </p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <Clock className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Timely Delivery</h3>
+              <p className="text-muted-foreground text-sm">
+                Equipment arrives early and is collected after your event
+              </p>
+            </div>
+            
+            <div className="text-center group">
+              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
+                <CheckCircle className="w-8 h-8 text-primary" />
+              </div>
+              <h3 className="font-bold text-lg mb-2">Event Ready</h3>
+              <p className="text-muted-foreground text-sm">
+                All software and hardware needed for successful events
+              </p>
+            </div>
           </div>
         </div>
       </div>
