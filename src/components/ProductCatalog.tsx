@@ -101,7 +101,7 @@ const ProductCatalog = () => {
   ];
 
   return (
-    <div className="bg-background py-16 px-4">
+    <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         
         {/* Bundles Section */}
@@ -278,10 +278,20 @@ const ProductCatalog = () => {
 
         {/* Features Section */}
         <div className="mt-24">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 bg-accent/20 px-4 py-2 rounded-full mb-4">
+              <Award className="w-5 h-5 text-primary" />
+              <span className="text-sm font-medium text-primary">Why Choose Us</span>
+            </div>
+            <h2 className="text-3xl font-bold mb-4">Our Features</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              We provide the best equipment and services for your events
+            </p>
+          </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <Award className="w-8 h-8 text-primary" />
+            <div className="text-center group border rounded-xl p-6 transition-all duration-300 hover:border-primary/80">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Award className="w-8 h-8 group-hover:text-primary" />
               </div>
               <h3 className="font-bold text-lg mb-2">Certified Partner</h3>
               <p className="text-muted-foreground text-sm">
@@ -289,9 +299,9 @@ const ProductCatalog = () => {
               </p>
             </div>
             
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <Clock className="w-8 h-8 text-primary" />
+            <div className="text-center group border rounded-xl p-6 transition-all duration-300 hover:border-primary/80">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-8 h-8 group-hover:text-primary" />
               </div>
               <h3 className="font-bold text-lg mb-2">Timely Delivery</h3>
               <p className="text-muted-foreground text-sm">
@@ -299,9 +309,9 @@ const ProductCatalog = () => {
               </p>
             </div>
             
-            <div className="text-center group">
-              <div className="w-16 h-16 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/20 transition-colors">
-                <CheckCircle className="w-8 h-8 text-primary" />
+            <div className="text-center group border rounded-xl p-6 transition-all duration-300 hover:border-primary/80">
+              <div className="w-16 h-16 rounded-xl flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 group-hover:text-primary" />
               </div>
               <h3 className="font-bold text-lg mb-2">Event Ready</h3>
               <p className="text-muted-foreground text-sm">

@@ -167,39 +167,6 @@ const RentalInquiry = () => {
             </div>
           </CardContent>
         </Card>
-
-        {/* Features */}
-        <div className="grid md:grid-cols-3 gap-6 mt-12">
-          <div className="text-center p-6">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-2">Certified Partner</h3>
-            <p className="text-sm text-muted-foreground">
-              Trusted B Corporation partnership ensuring quality and reliability
-            </p>
-          </div>
-          
-          <div className="text-center p-6">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Truck className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-2">Timely Delivery</h3>
-            <p className="text-sm text-muted-foreground">
-              Equipment arrives early and is collected after your event
-            </p>
-          </div>
-          
-          <div className="text-center p-6">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-6 h-6 text-primary" />
-            </div>
-            <h3 className="font-semibold mb-2">Event Ready</h3>
-            <p className="text-sm text-muted-foreground">
-              All software and hardware needed for successful events
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   );
