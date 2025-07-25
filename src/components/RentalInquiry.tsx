@@ -16,6 +16,7 @@ interface RentalInquiryProps {
   setStartDate: (date: Date) => void;
   setEndDate: (date: Date) => void;
   onContinue: () => void;
+  showValidation?: boolean;
 }
 const RentalInquiry: React.FC<RentalInquiryProps> = ({
   startDate,
@@ -23,6 +24,7 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
   setStartDate,
   setEndDate,
   onContinue,
+  showValidation = false,
 }) => {
 
   return (
@@ -62,7 +64,8 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal h-12 border-2 hover:border-primary/50 transition-colors",
-                        !startDate && "text-muted-foreground"
+                        !startDate && "text-muted-foreground",
+                        showValidation && !startDate && "border-red-500 bg-red-50"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -94,7 +97,8 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal h-12 border-2 hover:border-primary/50 transition-colors",
-                        !endDate && "text-muted-foreground"
+                        !endDate && "text-muted-foreground",
+                        showValidation && !endDate && "border-red-500 bg-red-50"
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -139,17 +143,22 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
 
             {/* Action Button */}
             <div className="text-center">
-              
               <Button
                 variant="gradient"
                 size="lg"
                 className="px-12 py-4 text-lg font-semibold"
-                disabled={!startDate || !endDate}
                 onClick={onContinue}
               >
                 Continue Rental Inquiry
               </Button>
-              {(!startDate || !endDate) && (
+              {showValidation && (!startDate || !endDate) && (
+                <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600 font-medium">
+                    ⚠️ Please select both rental dates to proceed with checkout
+                  </p>
+                </div>
+              )}
+              {!showValidation && (!startDate || !endDate) && (
                 <p className="text-sm text-muted-foreground mt-3">
                   Please select both rental dates to continue
                 </p>

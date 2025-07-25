@@ -10,7 +10,7 @@ interface ProductCatalogProps {
 }
 
 const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
-  const { addItem, recentlyAdded, getTotalItems } = useCartStore();
+  const { addItem, getTotalItems } = useCartStore();
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
 
   const getQuantity = (id: number) => quantities[id] || 1;
@@ -22,15 +22,55 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     }));
   };
 
-  const handleAddToCart = (item: any) => {
-    const quantity = getQuantity(item.id);
-    addItem({
-      id: item.id,
-      title: item.title,
-      price: item.price,
-      image: item.image,
-      category: item.category
-    }, quantity);
+  const createFlyingAnimation = (event: React.MouseEvent, item: any) => {
+    const button = event.currentTarget as HTMLButtonElement;
+    const card = button.closest('.product-card') as HTMLElement;
+    const productImg = card?.querySelector('.product-image') as HTMLImageElement;
+    const cartButton = document.querySelector('.cart-button') as HTMLElement;
+    
+    if (!productImg || !cartButton) return;
+
+    // Create flying image
+    const flyingImg = productImg.cloneNode(true) as HTMLImageElement;
+    const productRect = productImg.getBoundingClientRect();
+    const cartRect = cartButton.getBoundingClientRect();
+    
+    // Style the flying image
+    flyingImg.style.position = 'fixed';
+    flyingImg.style.top = `${productRect.top}px`;
+    flyingImg.style.left = `${productRect.left}px`;
+    flyingImg.style.width = `${productRect.width}px`;
+    flyingImg.style.height = `${productRect.height}px`;
+    flyingImg.style.zIndex = '9999';
+    flyingImg.style.transition = 'all 0.8s cubic-bezier(0.2, 1, 0.3, 1)';
+    flyingImg.style.pointerEvents = 'none';
+    flyingImg.className = 'flying-product-image';
+    
+    document.body.appendChild(flyingImg);
+    
+    // Animate to cart
+    requestAnimationFrame(() => {
+      flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
+      flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
+      flyingImg.style.width = '30px';
+      flyingImg.style.height = '30px';
+      flyingImg.style.opacity = '0.7';
+      flyingImg.style.transform = 'scale(0.1)';
+    });
+    
+    // Clean up after animation
+    setTimeout(() => {
+      document.body.removeChild(flyingImg);
+      // Add item after animation completes
+      const quantity = getQuantity(item.id);
+      addItem({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        image: item.image,
+        category: item.category
+      }, quantity);
+    }, 800);
   };
   const bundles = [
     {
@@ -123,14 +163,14 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
 
           <div className="grid md:grid-cols-2 gap-8">
             {bundles.map((bundle) => (
-              <Card key={bundle.id} className="group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
+              <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
                 <CardContent className="p-0">
                   {/* Product Image */}
                   <div className="relative h-60 from-muted to-muted/50">
                     <img 
                       src={bundle.image} 
                       alt={bundle.title}
-                      className="w-full h-full object-contain p-8"
+                      className="product-image w-full h-full object-contain p-8"
                     />
                     <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
                       {bundle.category}
@@ -186,24 +226,11 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                     </div>
                     
                     <Button 
-                      className={`w-full gap-2 transition-all duration-300 ${
-                        recentlyAdded === bundle.id 
-                          ? 'bg-green-500 text-white animate-pulse' 
-                          : 'bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90'
-                      }`}
-                      onClick={() => handleAddToCart(bundle)}
+                      className="w-full gap-2 bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                      onClick={(e) => createFlyingAnimation(e, bundle)}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      {recentlyAdded === bundle.id ? (
-                        <span className="flex items-center gap-2">
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Added to Cart!
-                        </span>
-                      ) : (
-                        'Add to Cart'
-                      )}
+                      Add to Cart
                     </Button>
                   </div>
                 </CardContent>
@@ -228,14 +255,14 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
               return (
-                <Card key={product.id} className="group transition-all duration-300 border hover:border-primary/90">
+                <Card key={product.id} className="product-card group transition-all duration-300 border hover:border-primary/90">
                   <CardContent className="p-6">
                     <div className="text-center mb-6">
                       <div className="w-32 h-32 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden transition-all duration-300">
                         <img 
                           src={product.image} 
                           alt={product.title}
-                          className="w-full h-full object-cover rounded-xl"
+                          className="product-image w-full h-full object-cover rounded-xl"
                         />
                       </div>
                       <Badge variant="outline" className="mb-2 bg-gradient-brand text-primary-foreground">{product.category}</Badge>
@@ -277,24 +304,11 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                       </div>
                       
                       <Button 
-                        className={`w-full gap-2 transition-all duration-300 ${
-                          recentlyAdded === product.id 
-                            ? 'bg-green-500 text-white animate-pulse' 
-                            : 'bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90'
-                        }`}
-                        onClick={() => handleAddToCart(product)}
+                        className="w-full gap-2 bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                        onClick={(e) => createFlyingAnimation(e, product)}
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        {recentlyAdded === product.id ? (
-                          <span className="flex items-center gap-2">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                            Added to Cart!
-                          </span>
-                        ) : (
-                          'Add to Cart'
-                        )}
+                        Add to Cart
                       </Button>
                     </div>
                   </CardContent>
