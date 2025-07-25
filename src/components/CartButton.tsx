@@ -12,7 +12,7 @@ const CartButton = () => {
     <Button
       variant="outline"
       onClick={openCart}
-      className="relative gap-2 hover:bg-gradient-brand hover:text-white transition-colors"
+      className="relative gap-2 hover:bg-gradient-brand  hover:text-white border-primary/80"
     >
       <ShoppingCart className="w-4 h-4" />
       Cart

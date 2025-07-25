@@ -22,7 +22,7 @@ const CartPopup = () => {
         <SheetHeader className="space-y-4">
           <div className="flex items-center justify-between">
             <SheetTitle className="text-xl font-bold">Shopping Cart</SheetTitle>
-            <Badge variant="secondary" className="px-3 py-1">
+            <Badge variant="secondary" className="px-3 py-1 bg-gradient-brand text-primary-foreground">
               {getTotalItems()} {getTotalItems() === 1 ? 'item' : 'items'}
             </Badge>
           </div>
