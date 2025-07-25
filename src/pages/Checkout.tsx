@@ -74,7 +74,7 @@ const Checkout = () => {
           <Button 
             variant="ghost" 
             onClick={() => navigate('/')}
-            className="gap-2 mb-4"
+            className="gap-2 mb-4 hover:bg-gradient-brand hover:text-white"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Shopping

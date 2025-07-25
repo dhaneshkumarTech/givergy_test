@@ -1,12 +1,11 @@
-import React, { useState } from "react";
+import { useState,forwardRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useCartStore } from "@/store/cart";
 import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus } from "lucide-react";
 
-const ProductCatalog = () => {
+const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
   const { addItem } = useCartStore();
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
 
@@ -101,6 +100,7 @@ const ProductCatalog = () => {
   ];
 
   return (
+    <div ref={ref}>
     <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         
@@ -212,7 +212,7 @@ const ProductCatalog = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => {
               return (
-                <Card key={product.id} className="group transition-all duration-300 border hover:border-primary/80">
+                <Card key={product.id} className="group transition-all duration-300 border hover:border-primary/90">
                   <CardContent className="p-6">
                     <div className="text-center mb-6">
                       <div className="w-32 h-32 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden transition-all duration-300">
@@ -277,7 +277,7 @@ const ProductCatalog = () => {
         </div>
 
         {/* Features Section */}
-        <div className="mt-24">
+        <div className="mt-24 mb-12">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-accent/20 px-4 py-2 rounded-full mb-4">
               <Award className="w-5 h-5 text-primary" />
@@ -322,7 +322,8 @@ const ProductCatalog = () => {
         </div>
       </div>
     </div>
+  </div>
   );
-};
+});
 
 export default ProductCatalog;

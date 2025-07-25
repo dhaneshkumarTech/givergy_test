@@ -10,45 +10,33 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
-const RentalInquiry = () => {
-  const [startDate, setStartDate] = useState<Date>();
-  const [endDate, setEndDate] = useState<Date>();
+interface RentalInquiryProps {
+  startDate?: Date;
+  endDate?: Date;
+  setStartDate: (date: Date) => void;
+  setEndDate: (date: Date) => void;
+  onContinue: () => void;
+}
+const RentalInquiry: React.FC<RentalInquiryProps> = ({
+  startDate,
+  endDate,
+  setStartDate,
+  setEndDate,
+  onContinue,
+}) => {
 
   return (
-    <div className="min-h-screen bg-gradient-subtle py-12 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-12 relative">
-          <div className="absolute top-0 right-0">
-            <CartButton />
-          </div>
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow">
-                <span className="text-white font-bold text-lg">G</span>
-              </div>
-              <span className="text-2xl font-bold bg-gradient-brand bg-clip-text text-transparent">
-                givergy
-              </span>
-            </div>
-            <div className="w-px h-8 bg-border"></div>
-            <div className="flex items-center gap-2">
-              <CheckCircle className="w-6 h-6 text-primary" />
-              <span className="text-sm font-medium text-muted-foreground">
-                Certified B Corporation
-              </span>
-            </div>
-          </div>
-          
-          <h1 className="text-4xl font-bold text-foreground mb-4">
+    <div className="min-h-screen bg-gradient-subtle py-4 px-4 mt-16">
+      <div className="text-center mb-12 relative">
+        <h1 className="text-4xl font-bold text-foreground mb-4">
             Event Equipment Rental
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Givergy and One World Rental partner together to provide you with all the software 
             and hardware you need to make your own event a success.
           </p>
-        </div>
-
+      </div>
+      <div className="max-w-4xl mx-auto">
         {/* Main Card */}
         <Card className="shadow-elegant border-0 overflow-hidden">
           <div className="bg-gradient-brand p-6 text-center">
@@ -151,11 +139,13 @@ const RentalInquiry = () => {
 
             {/* Action Button */}
             <div className="text-center">
+              
               <Button
                 variant="gradient"
                 size="lg"
                 className="px-12 py-4 text-lg font-semibold"
                 disabled={!startDate || !endDate}
+                onClick={onContinue}
               >
                 Continue Rental Inquiry
               </Button>
