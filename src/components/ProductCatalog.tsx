@@ -50,12 +50,12 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     
     // Animate to cart
     requestAnimationFrame(() => {
-      flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 15}px`;
-      flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 15}px`;
-      flyingImg.style.width = '30px';
-      flyingImg.style.height = '30px';
-      flyingImg.style.opacity = '0.7';
-      flyingImg.style.transform = 'scale(0.1)';
+      flyingImg.style.top = `${cartRect.top + cartRect.height / 2 - 45}px`;
+      flyingImg.style.left = `${cartRect.left + cartRect.width / 2 - 45}px`;
+      flyingImg.style.width = '90px';
+      flyingImg.style.height = '90px';
+      flyingImg.style.opacity = '0.9';
+      flyingImg.style.transform = 'scale(0.5)';
     });
     
     // Clean up after animation
@@ -226,7 +226,8 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                     </div>
                     
                     <Button 
-                      className="w-full gap-2 bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                      variant="outline"
+                      className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
                       onClick={(e) => createFlyingAnimation(e, bundle)}
                     >
                       <ShoppingCart className="w-4 h-4" />
@@ -304,7 +305,8 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                       </div>
                       
                       <Button 
-                        className="w-full gap-2 bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                        variant="outline"
+                        className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground transition-all"
                         onClick={(e) => createFlyingAnimation(e, product)}
                       >
                         <ShoppingCart className="w-4 h-4" />
