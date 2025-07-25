@@ -29,7 +29,7 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 const Checkout = () => {
-  const { items, getTotalItems, getTotalPrice } = useCartStore();
+  const { items, getTotalItems, getTotalPrice, startDate, endDate } = useCartStore();
   const navigate = useNavigate();
 
   const form = useForm<FormData>({
@@ -40,8 +40,8 @@ const Checkout = () => {
       phone: '',
       company: '',
       event_name: '',
-      event_date: '',
-      event_end_date: '',
+      event_date: startDate ? startDate.toISOString().split('T')[0] : '',
+      event_end_date: endDate ? endDate.toISOString().split('T')[0] : '',
       postal_code: '',
       shipping_details: '',
       message: '',

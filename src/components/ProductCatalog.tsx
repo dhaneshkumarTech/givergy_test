@@ -1,12 +1,16 @@
-import { useState,forwardRef } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/store/cart";
 import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus } from "lucide-react";
 
-const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
-  const { addItem } = useCartStore();
+interface ProductCatalogProps {
+  onRentNow: () => void;
+}
+
+const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
+  const { addItem, recentlyAdded, getTotalItems } = useCartStore();
   const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
 
   const getQuantity = (id: number) => quantities[id] || 1;
@@ -100,7 +104,7 @@ const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
   ];
 
   return (
-    <div ref={ref}>
+    <div>
     <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         
@@ -182,12 +186,24 @@ const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
                     </div>
                     
                     <Button 
-                      variant="outline" 
-                      className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground transition-all"
+                      className={`w-full gap-2 transition-all duration-300 ${
+                        recentlyAdded === bundle.id 
+                          ? 'bg-green-500 text-white animate-pulse' 
+                          : 'bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90'
+                      }`}
                       onClick={() => handleAddToCart(bundle)}
                     >
                       <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
+                      {recentlyAdded === bundle.id ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Added to Cart!
+                        </span>
+                      ) : (
+                        'Add to Cart'
+                      )}
                     </Button>
                   </div>
                 </CardContent>
@@ -261,12 +277,24 @@ const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
                       </div>
                       
                       <Button 
-                        variant="outline" 
-                        className="w-full gap-2 group-hover:bg-gradient-brand hover:text-primary-foreground group-hover:text-primary-foreground transition-all"
+                        className={`w-full gap-2 transition-all duration-300 ${
+                          recentlyAdded === product.id 
+                            ? 'bg-green-500 text-white animate-pulse' 
+                            : 'bg-gradient-brand text-primary-foreground hover:bg-gradient-brand/90'
+                        }`}
                         onClick={() => handleAddToCart(product)}
                       >
                         <ShoppingCart className="w-4 h-4" />
-                        Add to Cart
+                        {recentlyAdded === product.id ? (
+                          <span className="flex items-center gap-2">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                            </svg>
+                            Added to Cart!
+                          </span>
+                        ) : (
+                          'Add to Cart'
+                        )}
                       </Button>
                     </div>
                   </CardContent>
@@ -320,10 +348,32 @@ const ProductCatalog = forwardRef<HTMLDivElement>((props, ref) => {
             </div>
           </div>
         </div>
+
+        {/* Proceed to Checkout Section */}
+        <div className="mt-16 text-center border-t pt-12">
+          <div className="max-w-md mx-auto space-y-4">
+            <h3 className="text-xl font-bold">Ready to proceed?</h3>
+            <p className="text-muted-foreground">
+              Complete your rental with our secure checkout process
+            </p>
+            <Button 
+              className="w-full h-12 text-lg font-semibold bg-gradient-brand text-primary-foreground"
+              onClick={onRentNow}
+              disabled={getTotalItems() === 0}
+            >
+              Proceed to Checkout ({getTotalItems()} items)
+            </Button>
+            {getTotalItems() === 0 && (
+              <p className="text-sm text-muted-foreground text-center mt-2">
+                Add items to your cart before proceeding to checkout
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
-  </div>
+    </div>
   );
-});
+};
 
 export default ProductCatalog;
