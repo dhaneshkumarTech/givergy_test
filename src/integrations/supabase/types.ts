@@ -14,13 +14,198 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      order_items: {
+        Row: {
+          created_at: string | null
+          id: string
+          line_total: number
+          order_id: string | null
+          product_id: string | null
+          product_price: number
+          product_title: string
+          quantity: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          line_total: number
+          order_id?: string | null
+          product_id?: string | null
+          product_price: number
+          product_title: string
+          quantity: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          line_total?: number
+          order_id?: string | null
+          product_id?: string | null
+          product_price?: number
+          product_title?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          collection_cost: number | null
+          company_name: string
+          created_at: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          event_end_date: string | null
+          event_name: string
+          event_start_date: string | null
+          id: string
+          message: string | null
+          order_number: string
+          shipping_address: string | null
+          shipping_cost: number | null
+          status: string | null
+          stripe_payment_intent_id: string | null
+          subtotal: number
+          total_amount: number
+          updated_at: string | null
+          user_id: string | null
+          zip_code: string | null
+        }
+        Insert: {
+          collection_cost?: number | null
+          company_name: string
+          created_at?: string | null
+          customer_email: string
+          customer_name: string
+          customer_phone: string
+          event_end_date?: string | null
+          event_name: string
+          event_start_date?: string | null
+          id?: string
+          message?: string | null
+          order_number: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal: number
+          total_amount: number
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Update: {
+          collection_cost?: number | null
+          company_name?: string
+          created_at?: string | null
+          customer_email?: string
+          customer_name?: string
+          customer_phone?: string
+          event_end_date?: string | null
+          event_name?: string
+          event_start_date?: string | null
+          id?: string
+          message?: string | null
+          order_number?: string
+          shipping_address?: string | null
+          shipping_cost?: number | null
+          status?: string | null
+          stripe_payment_intent_id?: string | null
+          subtotal?: number
+          total_amount?: number
+          updated_at?: string | null
+          user_id?: string | null
+          zip_code?: string | null
+        }
+        Relationships: []
+      }
+      products: {
+        Row: {
+          category: string
+          created_at: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          price: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          price: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          price?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      shipping_zones: {
+        Row: {
+          collection_cost: number
+          created_at: string | null
+          id: string
+          shipping_cost: number
+          zip_code: string
+          zone_name: string
+        }
+        Insert: {
+          collection_cost: number
+          created_at?: string | null
+          id?: string
+          shipping_cost: number
+          zip_code: string
+          zone_name: string
+        }
+        Update: {
+          collection_cost?: number
+          created_at?: string | null
+          id?: string
+          shipping_cost?: number
+          zip_code?: string
+          zone_name?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
