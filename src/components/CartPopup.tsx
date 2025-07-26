@@ -8,10 +8,18 @@ import { ShoppingCart, Plus, Minus, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const CartPopup = () => {
-  const { items, isOpen, closeCart, removeItem, updateQuantity, getTotalItems, getTotalPrice } = useCartStore();
+  const { items, isOpen, closeCart, removeItem, updateQuantity, getTotalItems, getTotalPrice, startDate, endDate } = useCartStore();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
+    if (!startDate || !endDate) {
+      // Scroll to top to show date fields and close cart
+      closeCart();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Trigger validation state in parent component
+      window.dispatchEvent(new CustomEvent('show-date-validation'));
+      return;
+    }
     closeCart();
     navigate('/checkout');
   };
