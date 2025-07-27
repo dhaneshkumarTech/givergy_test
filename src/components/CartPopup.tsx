@@ -107,10 +107,10 @@ const CartPopup = () => {
                             
                             <div className="text-right">
                               <p className="font-bold text-primary">
-                                ${(parseFloat(item.price.replace('From: $', '')) * item.quantity).toFixed(2)}
+                                ${(item.price * item.quantity).toFixed(2)}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {item.price} each
+                                ${item.price.toFixed(2)} each
                               </p>
                             </div>
                           </div>

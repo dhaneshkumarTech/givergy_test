@@ -1,15 +1,17 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/cart';
+import { useShipping } from '@/hooks/useShipping';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package } from 'lucide-react';
+import { ArrowLeft, Package, Download, CreditCard, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
@@ -21,16 +23,29 @@ const formSchema = z.object({
   event_name: z.string().min(1, 'Event name is required'),
   event_date: z.string().optional(),
   event_end_date: z.string().optional(),
-  postal_code: z.string().optional(),
+  postal_code: z.string().min(5, 'Valid ZIP code is required'),
   shipping_details: z.string().optional(),
   message: z.string().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
 
+interface ShippingCost {
+  shipping_cost: number;
+  collection_cost: number;
+  zone_name: string;
+}
+
 const Checkout = () => {
-  const { items, getTotalItems, getTotalPrice, startDate, endDate } = useCartStore();
+  const { items, getTotalItems, getTotalPrice, startDate, endDate, clearCart } = useCartStore();
+  const { calculateShipping, getAddress, loading: shippingLoading } = useShipping();
   const navigate = useNavigate();
+  
+  const [shippingCost, setShippingCost] = useState<ShippingCost | null>(null);
+  const [addressInfo, setAddressInfo] = useState<string>('');
+  const [orderCreated, setOrderCreated] = useState<any>(null);
+  const [processingPayment, setProcessingPayment] = useState(false);
+  const [generatingQuote, setGeneratingQuote] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -48,9 +63,122 @@ const Checkout = () => {
     },
   });
 
-  const onSubmit = (data: FormData) => {
-    console.log('Form submitted:', data);
-    // Handle form submission here
+  const zipCode = form.watch('postal_code');
+
+  // Calculate shipping when ZIP code changes
+  useEffect(() => {
+    const fetchShippingAndAddress = async () => {
+      if (zipCode && zipCode.length >= 5) {
+        try {
+          const [shippingData, addressData] = await Promise.all([
+            calculateShipping(zipCode),
+            getAddress(zipCode)
+          ]);
+          
+          if (shippingData) {
+            setShippingCost(shippingData);
+          }
+          
+          if (addressData) {
+            setAddressInfo(addressData.full_address);
+            form.setValue('shipping_details', addressData.full_address);
+          }
+        } catch (error) {
+          console.error('Error fetching shipping info:', error);
+        }
+      } else {
+        setShippingCost(null);
+        setAddressInfo('');
+      }
+    };
+
+    fetchShippingAndAddress();
+  }, [zipCode, calculateShipping, getAddress, form]);
+
+  const subtotal = getTotalPrice();
+  const totalShipping = shippingCost ? shippingCost.shipping_cost + shippingCost.collection_cost : 0;
+  const totalAmount = subtotal + totalShipping;
+
+  const downloadQuote = async () => {
+    if (!orderCreated) return;
+    
+    setGeneratingQuote(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-pdf', {
+        body: { orderId: orderCreated.order_id, type: 'quote' }
+      });
+      
+      if (error) throw error;
+      
+      // Create and download the quote file
+      const blob = new Blob([data.html], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = data.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      toast.success('Quote downloaded successfully!');
+    } catch (error) {
+      console.error('Error generating quote:', error);
+      toast.error('Failed to generate quote');
+    } finally {
+      setGeneratingQuote(false);
+    }
+  };
+
+  const processPayment = async () => {
+    if (!orderCreated) return;
+    
+    setProcessingPayment(true);
+    try {
+      // Create Stripe checkout session and redirect
+      const checkoutUrl = `https://checkout.stripe.com/pay/${orderCreated.client_secret}#success_url=${window.location.origin}/payment-success?order_id=${orderCreated.order_id}`;
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error('Payment processing failed');
+      setProcessingPayment(false);
+    }
+  };
+
+  const onSubmit = async (data: FormData) => {
+    if (!shippingCost) {
+      toast.error('Please enter a valid ZIP code to calculate shipping');
+      return;
+    }
+
+    try {
+      const orderData = {
+        customerData: {
+          ...data,
+          event_date: data.event_date,
+          event_end_date: data.event_end_date,
+          postal_code: data.postal_code,
+          shipping_details: addressInfo
+        },
+        cartItems: items,
+        shippingCost: shippingCost.shipping_cost,
+        collectionCost: shippingCost.collection_cost,
+        subtotal: subtotal,
+        totalAmount: totalAmount
+      };
+
+      const { data: orderResult, error } = await supabase.functions.invoke('create-order', {
+        body: orderData
+      });
+
+      if (error) throw error;
+
+      setOrderCreated(orderResult);
+      toast.success('Order created successfully!');
+    } catch (error) {
+      console.error('Error creating order:', error);
+      toast.error('Failed to create order');
+    }
   };
 
   if (items.length === 0) {
@@ -62,6 +190,68 @@ const Checkout = () => {
             <ArrowLeft className="w-4 h-4" />
             Continue Shopping
           </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (orderCreated) {
+    return (
+      <div className="min-h-screen bg-background py-16 px-4">
+        <div className="max-w-4xl mx-auto">
+          <Card className="border-green-200 bg-green-50/50">
+            <CardHeader className="text-center">
+              <CardTitle className="text-2xl text-green-700">Order Created Successfully!</CardTitle>
+              <p className="text-green-600">Order Number: {orderCreated.order_number}</p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center space-y-4">
+                <p className="text-lg">Total Amount: <span className="font-bold text-primary">${orderCreated.amount.toFixed(2)}</span></p>
+                
+                <div className="flex gap-4 justify-center flex-wrap">
+                  <Button 
+                    onClick={downloadQuote}
+                    disabled={generatingQuote}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {generatingQuote ? (
+                      <>Generating...</>
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4" />
+                        Download Quote
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    onClick={processPayment}
+                    disabled={processingPayment}
+                    className="gap-2 bg-gradient-brand text-primary-foreground"
+                  >
+                    {processingPayment ? (
+                      <>Processing...</>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4" />
+                        Proceed to Payment
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                <Button 
+                  onClick={() => navigate('/')}
+                  variant="ghost"
+                  className="gap-2"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Back to Home
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -112,7 +302,7 @@ const Checkout = () => {
                           Qty: {item.quantity}
                         </span>
                         <span className="font-medium">
-                          ${(parseFloat(item.price.replace('From: $', '')) * item.quantity).toFixed(2)}
+                          ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
                     </div>
@@ -120,51 +310,54 @@ const Checkout = () => {
                 ))}
               </CardContent>
             </Card>
-          {/* Shipping Summary */}
+
+            {/* Shipping Summary */}
             <Card>
               <CardHeader>
                 <CardTitle>Shipping & Collection Summary</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span>Total Items:</span>
-                  <span>{getTotalItems()}</span>
+                  <span>Subtotal:</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
                 
                 <p className="text-sm text-muted-foreground italic">
                   *Chargers and cables will be included with the order.
                 </p>
                 
-                <div className="space-y-3 pt-4 border-t">
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Shipping Cost:</span>
+                {shippingCost ? (
+                  <div className="space-y-3 pt-4 border-t">
+                    <div className="text-sm text-green-600 mb-2">
+                      Shipping Zone: {shippingCost.zone_name}
                     </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Shipping Cost:</span>
+                      <span>${shippingCost.shipping_cost.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Collection Cost:</span>
+                      <span>${shippingCost.collection_cost.toFixed(2)}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3 pt-4 border-t">
                     <p className="text-sm text-primary">
-                      Enter ZIP code for USA to Calculate Shipping Cost
+                      Enter ZIP code to calculate shipping costs
                     </p>
                   </div>
-                  
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="font-medium">Collection / Return Cost:</span>
-                    </div>
-                    <p className="text-sm text-primary">
-                      Enter ZIP code for USA to Calculate Collection Cost
-                    </p>
-                  </div>
-                </div>
+                )}
                 
                 <div className="pt-4 border-t">
                   <div className="flex justify-between text-lg font-bold">
-                    <span>Total Amount (Including Shipping & Collection):</span>
-                    <span className="text-primary">${getTotalPrice().toFixed(2)}</span>
+                    <span>Total Amount:</span>
+                    <span className="text-primary">${totalAmount.toFixed(2)}</span>
                   </div>
                 </div>
               </CardContent>
             </Card>
-            
           </div>
+
           <div className="space-y-6">
             <Card>
               <CardHeader>
@@ -282,14 +475,26 @@ const Checkout = () => {
                       name="postal_code"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ZIP Code</FormLabel>
+                          <FormLabel>ZIP Code *</FormLabel>
                           <FormControl>
-                            <Input placeholder="Enter ZIP Code For USA" {...field} />
+                            <Input 
+                              placeholder="Enter ZIP Code For USA" 
+                              {...field}
+                              disabled={shippingLoading}
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+
+                    {addressInfo && (
+                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-700">
+                          <strong>Detected Address:</strong> {addressInfo}
+                        </p>
+                      </div>
+                    )}
 
                     <FormField
                       control={form.control}
@@ -298,7 +503,10 @@ const Checkout = () => {
                         <FormItem>
                           <FormLabel>Shipping Details</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="City, State, Country" {...field} />
+                            <Textarea 
+                              placeholder="Additional shipping details (auto-filled from ZIP code)" 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -312,23 +520,25 @@ const Checkout = () => {
                         <FormItem>
                           <FormLabel>Message</FormLabel>
                           <FormControl>
-                            <Textarea {...field} />
+                            <Textarea placeholder="Any additional notes..." {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
 
-                    <Button type="submit" className="w-full h-12 text-base bg-gradient-brand text-primary-foreground">
-                      Proceed to Payment
+                    <Button 
+                      type="submit" 
+                      className="w-full h-12 text-base bg-gradient-brand text-primary-foreground"
+                      disabled={!shippingCost || shippingLoading}
+                    >
+                      {shippingLoading ? 'Calculating...' : 'Create Order & Continue'}
                     </Button>
                   </form>
                 </Form>
               </CardContent>
             </Card>
           </div>
-
-
         </div>
       </div>
     </div>

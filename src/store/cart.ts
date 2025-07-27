@@ -1,9 +1,9 @@
 import { create } from 'zustand';
 
 export interface CartItem {
-  id: number;
+  id: string;
   title: string;
-  price: string;
+  price: number;
   image: string;
   category: string;
   quantity: number;
@@ -14,15 +14,15 @@ interface CartStore {
   isOpen: boolean;
   startDate?: Date;
   endDate?: Date;
-  recentlyAdded: number | null;
+  recentlyAdded: string | null;
   addItem: (item: Omit<CartItem, 'quantity'>, quantity?: number) => void;
-  removeItem: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeItem: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   openCart: () => void;
   closeCart: () => void;
   setDates: (startDate: Date | undefined, endDate: Date | undefined) => void;
-  setRecentlyAdded: (id: number | null) => void;
+  setRecentlyAdded: (id: string | null) => void;
   getTotalItems: () => number;
   getTotalPrice: () => number;
 }
@@ -82,8 +82,7 @@ export const useCartStore = create<CartStore>((set, get) => ({
   
   getTotalPrice: () => {
     return get().items.reduce((total, item) => {
-      const price = parseFloat(item.price.replace('From: $', ''));
-      return total + (price * item.quantity);
+      return total + (item.price * item.quantity);
     }, 0);
   },
 }));

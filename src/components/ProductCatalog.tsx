@@ -3,7 +3,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCartStore } from "@/store/cart";
-import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus } from "lucide-react";
+import { useProducts } from "@/hooks/useProducts";
+import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus, Loader2 } from "lucide-react";
 
 interface ProductCatalogProps {
   onRentNow: () => void;
@@ -11,11 +12,12 @@ interface ProductCatalogProps {
 
 const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
   const { addItem, getTotalItems } = useCartStore();
-  const [quantities, setQuantities] = useState<{ [key: number]: number }>({});
+  const { products, loading, error } = useProducts();
+  const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 
-  const getQuantity = (id: number) => quantities[id] || 1;
+  const getQuantity = (id: string) => quantities[id] || 1;
   
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     setQuantities(prev => ({
       ...prev,
       [id]: Math.max(1, quantity)
@@ -67,81 +69,34 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
         id: item.id,
         title: item.title,
         price: item.price,
-        image: item.image,
+        image: item.image_url,
         category: item.category
       }, quantity);
     }, 800);
   };
-  const bundles = [
-    {
-      id: 1,
-      title: "iPad 10.2 7th Gen WiFi and Stand Reader",
-      description: "iPad 10.2 7th gen WiFi with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
-      features: ["iPad 10.2 7th gen WiFi", "Related 4-5ft provided with carry case"],
-      price: "From: $59.75",
-      availability: " Quantity",
-      image: "/lovable-uploads/Apple_Thunderbolt_Display.webp",
-      category: "Bundle"
-    },
-    {
-      id: 2,
-      title: "iPad 10.2 7th Gen Cellular and Stand Reader", 
-      description: "iPad 10.2 7th gen Cellular with OpenReads software pre-loaded for contactless silent bidding and event management. Hub includes carry cases, strap, and cables.",
-      features: ["iPad 10.2 7th gen Cellular", "Related 4-5ft provided with carry case"],
-      price: "From: $69.75",
-      availability: "Quantity", 
-      image: "/lovable-uploads/Samsung_85_4K_Display.webp",
-      category: "Bundle"
-    }
-  ];
+  if (loading) {
+    return (
+      <div className="bg-background px-4 py-16">
+        <div className="max-w-6xl mx-auto text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p>Loading products...</p>
+        </div>
+      </div>
+    );
+  }
 
-  const products = [
-    {
-      id: 3,
-      title: "iPad 10.2 7th Gen WiFi",
-      description: "10.2 Retina display with fully anti-glare screen. Custom case registration and charging stands.",
-      price: "From: $39.75",
-      availability: "Quantity",
-      image: "/lovable-uploads/iPad_Pro_12.9_Wi-Fi.webp",
-      category: "iPad"
-    },
-    {
-      id: 4,
-      title: "iPad 10.2 7th Gen Cellular",
-      description: "10.2 Retina display with fully anti-glare screen. Custom case registration and charging stands.",
-      price: "From: $49.75", 
-      availability: "Quantity",
-      image: "/lovable-uploads/iPad_Pro_12.9_Wi-Fi.webp",
-      category: "iPad"
-    },
-    {
-      id: 5,
-      title: "Smartphone",
-      description: "Simple mobile cards reader and register also provided with custom covers and charging stations.",
-      price: "From: $29.75",
-      availability: "Quantity", 
-      image: "/lovable-uploads/iPhone_14_Pro_Max.webp",
-      category: "Mobile"
-    },
-    {
-      id: 6,
-      title: "Window Intel Desktop",
-      description: "Windows 10 Intel system provided with changing/power stations.",
-      price: "From: $89.75",
-      availability: "Quantity",
-      image: "/lovable-uploads/HP_Laptop.webp", 
-      category: "Desktop"
-    },
-    {
-      id: 7,
-      title: "Apple/MacBook Laptop",
-      description: "Business connection for events, leisure, and various catering stations.",
-      price: "From: $79.75",
-      availability: "Quantity",
-      image: "/lovable-uploads/MacBook_Pro_16_M1.webp",
-      category: "Laptop"
-    }
-  ];
+  if (error) {
+    return (
+      <div className="bg-background px-4 py-16">
+        <div className="max-w-6xl mx-auto text-center">
+          <p className="text-red-500">Error loading products: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const bundles = products.filter(p => p.category === "Bundle");
+  const individualProducts = products.filter(p => p.category !== "Bundle");
 
   return (
     <div>
@@ -168,7 +123,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                   {/* Product Image */}
                   <div className="relative h-60 from-muted to-muted/50">
                     <img 
-                      src={bundle.image} 
+                      src={bundle.image_url} 
                       alt={bundle.title}
                       className="product-image w-full h-full object-contain p-8"
                     />
@@ -187,19 +142,10 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                       {bundle.description}
                     </p>
                     
-                    <div className="space-y-2 mb-6">
-                      {bundle.features.map((feature, index) => (
-                        <div key={index} className="flex items-center gap-2 text-sm">
-                          <CheckCircle className="w-4 h-4 text-primary flex-shrink-0" />
-                          <span>{feature}</span>
-                        </div>
-                      ))}
-                    </div>
-                    
                     <div className="flex items-center justify-between mb-4">
                       <div>
-                        <p className="text-sm mb-1">{bundle.price}</p>
-                        <p className="text-sm text-muted-foreground mb-4">{bundle.availability}</p>
+                        <p className="text-sm mb-1">From: ${bundle.price.toFixed(2)}</p>
+                        <p className="text-sm text-muted-foreground mb-4">Available</p>
                       </div>
                       
                       <div className="flex items-center gap-2">
@@ -254,14 +200,14 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {products.map((product) => {
+            {individualProducts.map((product) => {
               return (
                 <Card key={product.id} className="product-card group transition-all duration-300 border hover:border-primary/90">
                   <CardContent className="p-6">
                     <div className="text-center mb-6">
                       <div className="w-32 h-32 rounded-xl flex items-center justify-center mx-auto mb-4 overflow-hidden transition-all duration-300">
                         <img 
-                          src={product.image} 
+                          src={product.image_url} 
                           alt={product.title}
                           className="product-image w-full h-full object-cover rounded-xl"
                         />
@@ -278,8 +224,8 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                     
                     <div className="text-center border-t pt-4 space-y-4">
                       <div>
-                        <p className="text-sm mb-1">{product.price}</p>
-                        <p className="text-sm text-muted-foreground mb-4">{product.availability}</p>
+                        <p className="text-sm mb-1">From: ${product.price.toFixed(2)}</p>
+                        <p className="text-sm text-muted-foreground mb-4">Available</p>
                       </div>
                       
                       <div className="flex items-center justify-center gap-2 mb-4">
