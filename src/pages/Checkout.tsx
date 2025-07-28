@@ -65,7 +65,7 @@ const Checkout = () => {
 
   const zipCode = form.watch('postal_code');
 
-  // Calculate shipping when ZIP code changes with debounce
+  // Calculate shipping when ZIP code changes
   useEffect(() => {
     if (!zipCode || zipCode.length < 5) {
       setShippingCost(null);
@@ -81,7 +81,7 @@ const Checkout = () => {
       return;
     }
 
-    const timer = setTimeout(async () => {
+    const fetchShippingAndAddress = async () => {
       try {
         const [shippingData, addressData] = await Promise.all([
           calculateShipping(cleanZip),
@@ -101,9 +101,9 @@ const Checkout = () => {
         setShippingCost(null);
         setAddressInfo('');
       }
-    }, 500); // 500ms debounce
+    };
 
-    return () => clearTimeout(timer);
+    fetchShippingAndAddress();
   }, [zipCode, calculateShipping, getAddress, form]);
 
   const subtotal = getTotalPrice();
@@ -201,9 +201,12 @@ const Checkout = () => {
     
     setProcessingPayment(true);
     try {
-      // Create Stripe checkout session and redirect
-      const checkoutUrl = `https://checkout.stripe.com/pay/${orderCreated.client_secret}#success_url=${window.location.origin}/payment-success?order_id=${orderCreated.order_id}`;
-      window.location.href = checkoutUrl;
+      // Redirect to Stripe checkout
+      if (orderCreated.checkout_url) {
+        window.location.href = orderCreated.checkout_url;
+      } else {
+        throw new Error('No checkout URL provided');
+      }
     } catch (error) {
       console.error('Error processing payment:', error);
       toast.error('Payment processing failed');
@@ -613,7 +616,7 @@ const Checkout = () => {
                     <Button 
                       type="submit" 
                       className="w-full h-12 text-base bg-gradient-brand text-primary-foreground"
-                      disabled={!shippingCost || shippingLoading}
+                      disabled={!shippingCost || shippingLoading || !form.formState.isValid || !form.getValues().name || !form.getValues().email || !form.getValues().phone || !form.getValues().company || !form.getValues().event_name || !form.getValues().postal_code}
                     >
                       {shippingLoading ? 'Calculating...' : 'Create Order & Continue'}
                     </Button>

@@ -92,27 +92,43 @@ serve(async (req) => {
       throw itemsError;
     }
 
-    // Create Stripe payment intent
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(totalAmount * 100), // Convert to cents
-      currency: 'usd',
+    // Create Stripe checkout session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: `Order ${orderNumber}`,
+              description: `Equipment rental for ${customerData.event_name}`,
+            },
+            unit_amount: Math.round(totalAmount * 100), // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:3000'}/payment-success?order_id=${order.id}`,
+      cancel_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:3000'}/checkout`,
       metadata: {
         order_id: order.id,
         order_number: orderNumber
       }
     });
 
-    // Update order with Stripe payment intent ID
+    // Update order with Stripe session ID
     await supabase
       .from('orders')
-      .update({ stripe_payment_intent_id: paymentIntent.id })
+      .update({ stripe_payment_intent_id: session.id })
       .eq('id', order.id);
 
     return new Response(
       JSON.stringify({
         order_id: order.id,
         order_number: orderNumber,
-        client_secret: paymentIntent.client_secret,
+        checkout_url: session.url,
+        session_id: session.id,
         amount: totalAmount
       }),
       {
