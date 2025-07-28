@@ -63,14 +63,26 @@ serve(async (req) => {
     }
 
     // Create order items
-    const orderItems = cartItems.map((item: any) => ({
-      order_id: order.id,
-      product_id: item.id,
-      product_title: item.title,
-      product_price: parseFloat(item.price.replace('From: $', '')),
-      quantity: item.quantity,
-      line_total: parseFloat(item.price.replace('From: $', '')) * item.quantity
-    }));
+    const orderItems = cartItems.map((item: any) => {
+      // Handle both string and number prices
+      let price = item.price;
+      if (typeof price === 'string') {
+        price = parseFloat(price.replace(/[^0-9.]/g, ''));
+      } else if (typeof price === 'number') {
+        price = price;
+      } else {
+        price = 0;
+      }
+      
+      return {
+        order_id: order.id,
+        product_id: item.id,
+        product_title: item.title,
+        product_price: price,
+        quantity: item.quantity,
+        line_total: price * item.quantity
+      };
+    });
 
     const { error: itemsError } = await supabase
       .from('order_items')

@@ -14,8 +14,14 @@ serve(async (req) => {
   try {
     const { zipCode } = await req.json();
 
-    if (!zipCode) {
+    if (!zipCode || zipCode.trim() === '') {
       throw new Error('ZIP code is required');
+    }
+
+    // Clean and validate ZIP code format
+    const cleanZipCode = zipCode.trim().replace(/[^\d-]/g, '');
+    if (!/^\d{5}(-\d{4})?$/.test(cleanZipCode)) {
+      throw new Error('Invalid ZIP code format. Please enter a 5-digit ZIP code.');
     }
 
     const supabase = createClient(
@@ -24,11 +30,17 @@ serve(async (req) => {
     );
 
     // Get state from address using Google Maps API
-    const addressResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`);
+    const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
+    if (!googleApiKey) {
+      throw new Error('Google Maps API key not configured');
+    }
+    
+    const addressResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`);
     const addressData = await addressResponse.json();
     
-    if (!addressData.results || addressData.results.length === 0) {
-      throw new Error('Invalid ZIP code');
+    if (addressData.status !== 'OK' || !addressData.results || addressData.results.length === 0) {
+      console.error('Google Maps API response:', addressData);
+      throw new Error(`Invalid ZIP code: ${addressData.status || 'No results found'}`);
     }
 
     // Extract state from address components

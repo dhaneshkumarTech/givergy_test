@@ -65,34 +65,45 @@ const Checkout = () => {
 
   const zipCode = form.watch('postal_code');
 
-  // Calculate shipping when ZIP code changes
+  // Calculate shipping when ZIP code changes with debounce
   useEffect(() => {
-    const fetchShippingAndAddress = async () => {
-      if (zipCode && zipCode.length >= 5) {
-        try {
-          const [shippingData, addressData] = await Promise.all([
-            calculateShipping(zipCode),
-            getAddress(zipCode)
-          ]);
-          
-          if (shippingData) {
-            setShippingCost(shippingData);
-          }
-          
-          if (addressData) {
-            setAddressInfo(addressData.full_address);
-            form.setValue('shipping_details', addressData.full_address);
-          }
-        } catch (error) {
-          console.error('Error fetching shipping info:', error);
+    if (!zipCode || zipCode.length < 5) {
+      setShippingCost(null);
+      setAddressInfo('');
+      return;
+    }
+
+    // Validate ZIP code format
+    const cleanZip = zipCode.trim().replace(/[^\d-]/g, '');
+    if (!/^\d{5}(-\d{4})?$/.test(cleanZip)) {
+      setShippingCost(null);
+      setAddressInfo('');
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const [shippingData, addressData] = await Promise.all([
+          calculateShipping(cleanZip),
+          getAddress(cleanZip)
+        ]);
+        
+        if (shippingData) {
+          setShippingCost(shippingData);
         }
-      } else {
+        
+        if (addressData) {
+          setAddressInfo(addressData.full_address);
+          form.setValue('shipping_details', addressData.full_address);
+        }
+      } catch (error) {
+        console.error('Error fetching shipping info:', error);
         setShippingCost(null);
         setAddressInfo('');
       }
-    };
+    }, 500); // 500ms debounce
 
-    fetchShippingAndAddress();
+    return () => clearTimeout(timer);
   }, [zipCode, calculateShipping, getAddress, form]);
 
   const subtotal = getTotalPrice();

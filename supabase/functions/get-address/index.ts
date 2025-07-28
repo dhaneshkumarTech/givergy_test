@@ -13,8 +13,14 @@ serve(async (req) => {
   try {
     const { zipCode } = await req.json();
 
-    if (!zipCode) {
+    if (!zipCode || zipCode.trim() === '') {
       throw new Error('ZIP code is required');
+    }
+
+    // Clean and validate ZIP code format
+    const cleanZipCode = zipCode.trim().replace(/[^\d-]/g, '');
+    if (!/^\d{5}(-\d{4})?$/.test(cleanZipCode)) {
+      throw new Error('Invalid ZIP code format. Please enter a 5-digit ZIP code.');
     }
 
     const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
@@ -23,7 +29,7 @@ serve(async (req) => {
     }
 
     // Use Google Geocoding API to get address details from ZIP code
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=${googleApiKey}&components=country:US`;
+    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`;
     
     const response = await fetch(geocodeUrl);
     const data = await response.json();
@@ -58,8 +64,8 @@ serve(async (req) => {
         city,
         state,
         country,
-        zipCode,
-        full_address: `${city}, ${state} ${zipCode}, ${country}`
+        zipCode: cleanZipCode,
+        full_address: `${city}, ${state} ${cleanZipCode}, ${country}`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
