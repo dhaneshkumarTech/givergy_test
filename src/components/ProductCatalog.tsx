@@ -99,7 +99,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
   const individualProducts = products.filter(p => p.category !== "Bundle");
 
   return (
-    <div>
+    <div id="products-section">
     <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         

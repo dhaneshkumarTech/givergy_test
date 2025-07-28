@@ -173,27 +173,24 @@ export type Database = {
       shipping_zones: {
         Row: {
           collection_cost: number
-          created_at: string | null
+          created_at: string
           id: string
           shipping_cost: number
-          zip_code: string
-          zone_name: string
+          state: string
         }
         Insert: {
           collection_cost: number
-          created_at?: string | null
+          created_at?: string
           id?: string
           shipping_cost: number
-          zip_code: string
-          zone_name: string
+          state: string
         }
         Update: {
           collection_cost?: number
-          created_at?: string | null
+          created_at?: string
           id?: string
           shipping_cost?: number
-          zip_code?: string
-          zone_name?: string
+          state?: string
         }
         Relationships: []
       }

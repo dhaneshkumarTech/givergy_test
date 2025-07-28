@@ -23,11 +23,31 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Look up shipping costs by ZIP code
+    // Get state from address using Google Maps API
+    const addressResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${zipCode}&key=${Deno.env.get('GOOGLE_MAPS_API_KEY')}`);
+    const addressData = await addressResponse.json();
+    
+    if (!addressData.results || addressData.results.length === 0) {
+      throw new Error('Invalid ZIP code');
+    }
+
+    // Extract state from address components
+    const addressComponents = addressData.results[0].address_components;
+    const stateComponent = addressComponents.find((component: any) => 
+      component.types.includes('administrative_area_level_1')
+    );
+    
+    if (!stateComponent) {
+      throw new Error('Could not determine state from ZIP code');
+    }
+
+    const state = stateComponent.short_name;
+
+    // Look up shipping costs by state
     const { data: shippingZone, error } = await supabase
       .from('shipping_zones')
       .select('*')
-      .eq('zip_code', zipCode)
+      .eq('state', state)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -37,13 +57,13 @@ serve(async (req) => {
     // If no exact match, apply default shipping costs
     const shipping = shippingZone || {
       zone_name: 'Standard Zone',
-      shipping_cost: 40.00,
-      collection_cost: 40.00
+      shipping_cost: 75.00,
+      collection_cost: 75.00
     };
 
     return new Response(
       JSON.stringify({
-        zone_name: shipping.zone_name,
+        zone_name: shipping.zone_name || `${state} Zone`,
         shipping_cost: shipping.shipping_cost,
         collection_cost: shipping.collection_cost,
         total_shipping: (parseFloat(shipping.shipping_cost) + parseFloat(shipping.collection_cost)).toFixed(2)

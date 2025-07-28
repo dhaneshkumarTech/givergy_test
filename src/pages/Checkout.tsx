@@ -100,7 +100,62 @@ const Checkout = () => {
   const totalAmount = subtotal + totalShipping;
 
   const downloadQuote = async () => {
-    if (!orderCreated) return;
+    if (!orderCreated) {
+      // Create a temporary order for quote generation
+      if (!shippingCost) {
+        toast.error('Please enter a valid ZIP code to calculate shipping');
+        return;
+      }
+      
+      try {
+        const tempOrderData = {
+          customerData: {
+            ...form.getValues(),
+            event_date: form.getValues().event_date,
+            event_end_date: form.getValues().event_end_date,
+            postal_code: form.getValues().postal_code,
+            shipping_details: addressInfo
+          },
+          cartItems: items,
+          shippingCost: shippingCost.shipping_cost,
+          collectionCost: shippingCost.collection_cost,
+          subtotal: subtotal,
+          totalAmount: totalAmount,
+          isQuoteOnly: true
+        };
+
+        const { data: quoteResult, error } = await supabase.functions.invoke('create-order', {
+          body: tempOrderData
+        });
+
+        if (error) throw error;
+
+        // Generate quote with temporary order
+        const { data: pdfData, error: pdfError } = await supabase.functions.invoke('generate-pdf', {
+          body: { orderId: quoteResult.order_id, type: 'quote' }
+        });
+        
+        if (pdfError) throw pdfError;
+        
+        // Create and download the quote file
+        const blob = new Blob([pdfData.html], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = pdfData.filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        toast.success('Quote downloaded successfully!');
+        return;
+      } catch (error) {
+        console.error('Error generating quote:', error);
+        toast.error('Failed to generate quote');
+        return;
+      }
+    }
     
     setGeneratingQuote(true);
     try {
@@ -261,14 +316,31 @@ const Checkout = () => {
     <div className="min-h-screen bg-background py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="gap-2 mb-4 hover:bg-gradient-brand hover:text-white"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Shopping
-          </Button>
+          <div className="flex gap-4 mb-4">
+            <Button 
+              variant="ghost" 
+              onClick={() => navigate('/')}
+              className="gap-2 hover:bg-gradient-brand hover:text-white"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Shopping
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={downloadQuote}
+              disabled={generatingQuote}
+              className="gap-2"
+            >
+              {generatingQuote ? (
+                <>Generating...</>
+              ) : (
+                <>
+                  <FileText className="w-4 h-4" />
+                  Download Quote
+                </>
+              )}
+            </Button>
+          </div>
           <h1 className="text-3xl font-bold">Checkout</h1>
         </div>
 

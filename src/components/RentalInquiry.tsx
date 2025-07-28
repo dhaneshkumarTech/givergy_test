@@ -147,7 +147,17 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                 variant="gradient"
                 size="lg"
                 className="px-12 py-4 text-lg font-semibold"
-                onClick={onContinue}
+                onClick={() => {
+                  onContinue();
+                  // Scroll to products section after continue
+                  setTimeout(() => {
+                    const productsSection = document.getElementById('products-section');
+                    if (productsSection) {
+                      productsSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 100);
+                }}
+                disabled={!startDate || !endDate}
               >
                 Continue Rental Inquiry
               </Button>
