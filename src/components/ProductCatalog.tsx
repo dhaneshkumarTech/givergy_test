@@ -15,12 +15,15 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
   const { products, loading, error } = useProducts();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
 
-  const getQuantity = (id: string) => quantities[id] || 1;
+  const getQuantity = (id: string, isBundle: boolean = false) => {
+    return quantities[id] || (isBundle ? 1 : 3);
+  };
   
-  const updateQuantity = (id: string, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number, isBundle: boolean = false) => {
+    const minQuantity = isBundle ? 1 : 3;
     setQuantities(prev => ({
       ...prev,
-      [id]: Math.max(1, quantity)
+      [id]: Math.max(minQuantity, quantity)
     }));
   };
 
@@ -64,7 +67,8 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     setTimeout(() => {
       document.body.removeChild(flyingImg);
       // Add item after animation completes
-      const quantity = getQuantity(item.id);
+      const isBundle = item.category.startsWith('Bundle');
+      const quantity = getQuantity(item.id, isBundle);
       addItem({
         id: item.id,
         title: item.title,
@@ -95,8 +99,10 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     );
   }
 
-  const bundles = products.filter(p => p.category === "Bundle");
-  const individualProducts = products.filter(p => p.category !== "Bundle");
+  const bundle3 = products.filter(p => p.category === "Bundle-3");
+  const bundle5 = products.filter(p => p.category === "Bundle-5");
+  const bundle10 = products.filter(p => p.category === "Bundle-10");
+  const individualProducts = products.filter(p => p.category === "Individual");
 
   return (
     <div id="products-section">
@@ -116,74 +122,224 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
-            {bundles.map((bundle) => (
-              <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
-                <CardContent className="p-0">
-                  {/* Product Image */}
-                  <div className="relative h-60 from-muted to-muted/50">
-                    <img 
-                      src={bundle.image_url} 
-                      alt={bundle.title}
-                      className="product-image w-full h-full object-contain p-8"
-                    />
-                    <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                      {bundle.category}
-                    </Badge>
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="p-6">
-                    <h3 className="font-bold text-lg text-center mb-2 transition-colors">
-                      {bundle.title}
-                    </h3>
-                    
-                    <p className="text-muted-foreground text-sm mb-4 leading-relaxed">
-                      {bundle.description}
-                    </p>
-                    
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <p className="text-sm mb-1">From: ${bundle.price.toFixed(2)}</p>
-                        <p className="text-sm text-muted-foreground mb-4">Available</p>
+          {/* Bundle Type 3 */}
+          {bundle3.length > 0 && (
+            <div className="mb-12">
+              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 3 Units</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                {bundle3.map((bundle) => (
+                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="relative h-60 from-muted to-muted/50">
+                        <img 
+                          src={bundle.image_url} 
+                          alt={bundle.title}
+                          className="product-image w-full h-full object-contain p-8"
+                        />
+                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
+                          3 Units
+                        </Badge>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <Button
+                      <div className="p-6">
+                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
+                          {bundle.title}
+                        </h4>
+                        
+                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
+                          {bundle.description}
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">per bundle</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">
+                              {getQuantity(bundle.id, true)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <Button 
                           variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id) - 1)}
+                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                          onClick={(e) => createFlyingAnimation(e, bundle)}
                         >
-                          <Minus className="w-3 h-3" />
-                        </Button>
-                        <span className="w-8 text-center font-medium">
-                          {getQuantity(bundle.id)}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id) + 1)}
-                        >
-                          <Plus className="w-3 h-3" />
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
                         </Button>
                       </div>
-                    </div>
-                    
-                    <Button 
-                      variant="outline"
-                      className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
-                      onClick={(e) => createFlyingAnimation(e, bundle)}
-                    >
-                      <ShoppingCart className="w-4 h-4" />
-                      Add to Cart
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bundle Type 5 */}
+          {bundle5.length > 0 && (
+            <div className="mb-12">
+              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 5 Units</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                {bundle5.map((bundle) => (
+                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="relative h-60 from-muted to-muted/50">
+                        <img 
+                          src={bundle.image_url} 
+                          alt={bundle.title}
+                          className="product-image w-full h-full object-contain p-8"
+                        />
+                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
+                          5 Units
+                        </Badge>
+                      </div>
+                      
+                      <div className="p-6">
+                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
+                          {bundle.title}
+                        </h4>
+                        
+                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
+                          {bundle.description}
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">per bundle</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">
+                              {getQuantity(bundle.id, true)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          variant="outline"
+                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                          onClick={(e) => createFlyingAnimation(e, bundle)}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Bundle Type 10 */}
+          {bundle10.length > 0 && (
+            <div className="mb-12">
+              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 10 Units</h3>
+              <div className="grid md:grid-cols-2 gap-8">
+                {bundle10.map((bundle) => (
+                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
+                    <CardContent className="p-0">
+                      <div className="relative h-60 from-muted to-muted/50">
+                        <img 
+                          src={bundle.image_url} 
+                          alt={bundle.title}
+                          className="product-image w-full h-full object-contain p-8"
+                        />
+                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
+                          10 Units
+                        </Badge>
+                      </div>
+                      
+                      <div className="p-6">
+                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
+                          {bundle.title}
+                        </h4>
+                        
+                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
+                          {bundle.description}
+                        </div>
+                        
+                        <div className="flex items-center justify-between mb-4">
+                          <div>
+                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">per bundle</p>
+                          </div>
+                          
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
+                            >
+                              <Minus className="w-3 h-3" />
+                            </Button>
+                            <span className="w-8 text-center font-medium">
+                              {getQuantity(bundle.id, true)}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
+                            >
+                              <Plus className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                        
+                        <Button 
+                          variant="outline"
+                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                          onClick={(e) => createFlyingAnimation(e, bundle)}
+                        >
+                          <ShoppingCart className="w-4 h-4" />
+                          Add to Cart
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Individual Products Section */}
@@ -193,9 +349,9 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
               <Tablet className="w-5 h-5 text-primary" />
               <span className="text-sm font-medium text-primary">Individual Items</span>
             </div>
-            <h2 className="text-3xl font-bold mb-4">iPads / Laptops</h2>
+            <h2 className="text-3xl font-bold mb-4">Individual Products</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We Provide iPad / Laptops services for events
+              Individual equipment rentals (Minimum quantity: 3)
             </p>
           </div>
 
@@ -233,22 +389,25 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(product.id, getQuantity(product.id) - 1)}
+                          onClick={() => updateQuantity(product.id, getQuantity(product.id, false) - 1, false)}
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
                         <span className="w-8 text-center font-medium">
-                          {getQuantity(product.id)}
+                          {getQuantity(product.id, false)}
                         </span>
                         <Button
                           variant="outline"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() => updateQuantity(product.id, getQuantity(product.id) + 1)}
+                          onClick={() => updateQuantity(product.id, getQuantity(product.id, false) + 1, false)}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
                       </div>
+                      <p className="text-xs text-muted-foreground mb-4 text-center">
+                        Minimum quantity: 3
+                      </p>
                       
                       <Button 
                         variant="outline"
