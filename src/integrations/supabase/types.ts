@@ -14,27 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      bundle_pricing: {
-        Row: {
-          bundle_type: number
-          created_at: string | null
-          id: string
-          price_multiplier: number
-        }
-        Insert: {
-          bundle_type: number
-          created_at?: string | null
-          id?: string
-          price_multiplier: number
-        }
-        Update: {
-          bundle_type?: number
-          created_at?: string | null
-          id?: string
-          price_multiplier?: number
-        }
-        Relationships: []
-      }
       order_items: {
         Row: {
           created_at: string | null
