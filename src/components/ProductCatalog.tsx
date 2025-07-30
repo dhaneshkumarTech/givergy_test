@@ -99,10 +99,10 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     );
   }
 
-  const bundle3 = products.filter(p => p.category === "Bundle-3");
-  const bundle5 = products.filter(p => p.category === "Bundle-5");
-  const bundle10 = products.filter(p => p.category === "Bundle-10");
-  const individualProducts = products.filter(p => p.category === "Individual");
+  const bundle3 = products.filter(p => p.category === "Bundle");
+  const bundle5 = products.filter(p => p.category === "Bundle");
+  const bundle10 = products.filter(p => p.category === "Bundle");
+  const individualProducts = products.filter(p => p.category != "Bundle");
 
   return (
     <div id="products-section">
@@ -125,7 +125,6 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
           {/* Bundle Type 3 */}
           {bundle3.length > 0 && (
             <div className="mb-12">
-              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 3 Units</h3>
               <div className="grid md:grid-cols-2 gap-8">
                 {bundle3.map((bundle) => (
                   <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
@@ -137,153 +136,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                           className="product-image w-full h-full object-contain p-8"
                         />
                         <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                          3 Units
-                        </Badge>
-                      </div>
-                      
-                      <div className="p-6">
-                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
-                          {bundle.title}
-                        </h4>
-                        
-                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
-                          {bundle.description}
-                        </div>
-                        
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">per bundle</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {getQuantity(bundle.id, true)}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          variant="outline"
-                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
-                          onClick={(e) => createFlyingAnimation(e, bundle)}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bundle Type 5 */}
-          {bundle5.length > 0 && (
-            <div className="mb-12">
-              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 5 Units</h3>
-              <div className="grid md:grid-cols-2 gap-8">
-                {bundle5.map((bundle) => (
-                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative h-60 from-muted to-muted/50">
-                        <img 
-                          src={bundle.image_url} 
-                          alt={bundle.title}
-                          className="product-image w-full h-full object-contain p-8"
-                        />
-                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                          5 Units
-                        </Badge>
-                      </div>
-                      
-                      <div className="p-6">
-                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
-                          {bundle.title}
-                        </h4>
-                        
-                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
-                          {bundle.description}
-                        </div>
-                        
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">per bundle</p>
-                          </div>
-                          
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {getQuantity(bundle.id, true)}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <Button 
-                          variant="outline"
-                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
-                          onClick={(e) => createFlyingAnimation(e, bundle)}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Bundle Type 10 */}
-          {bundle10.length > 0 && (
-            <div className="mb-12">
-              <h3 className="text-xl font-semibold mb-6 text-center">Bundle Type: 10 Units</h3>
-              <div className="grid md:grid-cols-2 gap-8">
-                {bundle10.map((bundle) => (
-                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative h-60 from-muted to-muted/50">
-                        <img 
-                          src={bundle.image_url} 
-                          alt={bundle.title}
-                          className="product-image w-full h-full object-contain p-8"
-                        />
-                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                          10 Units
+                          {bundle.category}
                         </Badge>
                       </div>
                       

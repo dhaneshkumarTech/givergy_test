@@ -26,24 +26,21 @@ interface OrderDetails {
 const PaymentSuccess = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const [generatingReceipt, setGeneratingReceipt] = useState(false);
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
-  const [generatingReceipt, setGeneratingReceipt] = useState(false);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      const sessionId = searchParams.get('session_id');
+      console.log('Fetching order details...');
       const orderId = searchParams.get('order_id');
-      
+      console.log('Fetching order details for ID:', orderId);
       if (!orderId) {
         toast.error('No order ID found');
         navigate('/');
         return;
-      }
-
+      }   
       try {
-        // In a real implementation, you might want to verify the session_id with Stripe
-        // For now, we'll just fetch the order details
         const { data, error } = await supabase
           .from('orders')
           .select(`
@@ -59,7 +56,6 @@ const PaymentSuccess = () => {
           .single();
 
         if (error) throw error;
-
         setOrderDetails(data);
       } catch (error) {
         console.error('Error fetching order details:', error);
@@ -68,7 +64,6 @@ const PaymentSuccess = () => {
         setLoading(false);
       }
     };
-
     fetchOrderDetails();
   }, [searchParams, navigate]);
 
