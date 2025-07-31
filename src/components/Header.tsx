@@ -30,36 +30,36 @@ const Header = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all duration-300 hover:shadow-glow hover:scale-105">
+                <img src="" className="" />
+
                 <span className="text-white font-bold text-lg">G</span>
               </div>
+              {/* logo */}
               <span className="text-xl font-bold bg-gradient-brand bg-clip-text text-transparent">
                 givergy
               </span>
             </div>
             
-            {/* Separator and certification badge */}
             <div className="hidden sm:flex items-center gap-3">
               <div className="w-px h-6 bg-border"></div>
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-primary" />
                 <span className="text-sm font-medium text-muted-foreground">
-                  Certified B Corporation
+                  One World Rental
                 </span>
               </div>
             </div>
           </div>
 
-          {/* Cart Button */}
           <div className="flex items-center">
             <CartButton />
           </div>
         </div>
 
-        {/* Mobile certification badge */}
         <div className="flex sm:hidden items-center justify-center gap-2 mt-3 pt-3 border-t border-border/20">
           <CheckCircle className="w-4 h-4 text-primary" />
           <span className="text-xs font-medium text-muted-foreground">
-            Certified B Corporation
+            One World Rental
           </span>
         </div>
       </div>
