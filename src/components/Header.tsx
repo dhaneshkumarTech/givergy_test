@@ -30,14 +30,12 @@ const Header = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all duration-300 hover:shadow-glow hover:scale-105">
-                <img src="" className="" />
-
-                <span className="text-white font-bold text-lg">G</span>
+                <img src="/products/iPad_Pro_12.9_Wi-Fi.png" alt="Givergy Logo" className="w-8 h-8 object-contain" />
               </div>
-              {/* logo */}
-              <span className="text-xl font-bold bg-gradient-brand bg-clip-text text-transparent">
-                givergy
-              </span>
+              {/* Second logo */}
+              <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all duration-300 hover:shadow-glow hover:scale-105">
+                <img src="/products/iPad_10.2_Gen_Cellular_Stripe_Reader.png" alt="Partner Logo" className="w-8 h-8 object-contain" />
+              </div>
             </div>
             
             <div className="hidden sm:flex items-center gap-3">

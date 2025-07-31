@@ -36,11 +36,12 @@ export const useCartStore = create<CartStore>((set, get) => ({
   
   addItem: (item, quantity = 1) => {
     set((state) => {
-      const existingItem = state.items.find((i) => i.id === item.id);
+      const identifier = item.id + '-' + item.category;
+      const existingItem = state.items.find((i) => i.id + '-' + i.category === identifier);
       if (existingItem) {
         return {
           items: state.items.map((i) =>
-            i.id === item.id ? { ...i, quantity: i.quantity + quantity } : i
+            i.id + '-' + i.category === identifier ? { ...i, quantity: i.quantity + quantity } : i
           ),
           recentlyAdded: item.id,
         };
