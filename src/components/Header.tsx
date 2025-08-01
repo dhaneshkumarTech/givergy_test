@@ -18,43 +18,62 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300 ease-in-out border-b",
         isScrolled
-          ? "bg-background/95 backdrop-blur-header shadow-header border-b border-border/50"
-          : "bg-transparent"
+          ? "bg-white border-primary/10 shadow-sm"
+          : "bg-gradient-subtle/80 backdrop-blur-sm"
       )}
     >
       <div className="container mx-auto px-4 py-4">
-        <div className="flex items-center justify-between">
-          {/* Logo and Brand */}
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all duration-300 hover:shadow-glow hover:scale-105">
-                <img src="/products/iPad_Pro_12.9_Wi-Fi.png" alt="Givergy Logo" className="w-8 h-8 object-contain" />
-              </div>
-              {/* Second logo */}
-              <div className="w-10 h-10 rounded-full bg-gradient-brand flex items-center justify-center shadow-glow transition-all duration-300 hover:shadow-glow hover:scale-105">
-                <img src="/products/iPad_10.2_Gen_Cellular_Stripe_Reader.png" alt="Partner Logo" className="w-8 h-8 object-contain" />
-              </div>
+        <div className="hidden md:flex items-center justify-between">
+          {/* Left spacer for balance */}
+          <div className="flex-1"></div>
+          
+          {/* Centered Logos */}
+          <div className="flex items-center justify-center">
+            <div className="w-46 h-12 flex items-center justify-center transition-all duration-300  hover:drop-shadow-lg rounded-lg p-2">
+              <a href="https://www.givergy.com/us/" className="w-full h-full">
+                <img src="/products/givergy2.png" alt="Givergy Logo" className="object-contain h-full w-full" />
+              </a>
             </div>
-            
-            <div className="hidden sm:flex items-center gap-3">
-              <div className="w-px h-6 bg-border"></div>
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  One World Rental
-                </span>
-              </div>
+            <div className="w-8 h-8 flex items-center justify-center transition-all duration-300  hover:drop-shadow-lg rounded-lg p-2">
+                <img src="/products/cross.png" alt="Partner Logo" className="object-contain h-full w-full" />
+            </div>
+
+            <div className="w-48 h-12 flex items-center justify-center transition-all duration-300  hover:drop-shadow-lg rounded-lg p-2">
+              <a href="https://oneworldrental.com/" className="w-full h-full">
+                <img src="/products/owr.png" alt="Partner Logo" className="object-contain h-full w-full" />
+              </a>
             </div>
           </div>
 
-          <div className="flex items-center">
+          {/* Right aligned cart button */}
+          <div className="flex-1 flex justify-end">
             <CartButton />
           </div>
         </div>
 
-        <div className="flex sm:hidden items-center justify-center gap-2 mt-3 pt-3 border-t border-border/20">
+        {/* Mobile Layout */}
+        <div className="flex md:hidden items-center justify-between">
+          {/* Mobile Logos */}
+          <div className="flex items-center gap-4">
+            <div className="w-24 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105">
+              <a href="https://www.givergy.com/us/">
+                <img src="/products/givergy.png" alt="Givergy Logo" className="object-contain h-full w-full" />
+              </a>
+            </div>
+            <div className="w-24 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105">
+              <a href="https://oneworldrental.com/">
+                <img src="/products/15year-logo.png" alt="Partner Logo" className="object-contain h-full w-full" />
+              </a>
+            </div>
+          </div>
+
+          <CartButton />
+        </div>
+
+        {/* Mobile version with stacked layout */}
+        <div className="flex md:hidden items-center justify-center gap-2 mt-3 pt-3 border-t border-border/20">
           <CheckCircle className="w-4 h-4 text-primary" />
           <span className="text-xs font-medium text-muted-foreground">
             One World Rental

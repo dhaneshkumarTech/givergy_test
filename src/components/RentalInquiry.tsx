@@ -26,10 +26,26 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
   onContinue,
   showValidation = false,
 }) => {
+  const [startDateOpen, setStartDateOpen] = useState(false);
+  const [endDateOpen, setEndDateOpen] = useState(false);
+
+  const handleStartDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setStartDate(date);
+      setStartDateOpen(false); // Auto-close calendar
+    }
+  };
+
+  const handleEndDateSelect = (date: Date | undefined) => {
+    if (date) {
+      setEndDate(date);
+      setEndDateOpen(false); // Auto-close calendar
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-subtle py-4 px-4 mt-16">
-      <div className="text-center mb-12 relative">
+      <div className="text-center mb-12 relative mt-6">
         <h1 className="text-4xl font-bold text-foreground mb-4">
             Event Equipment Rental
           </h1>
@@ -58,7 +74,7 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                   <CalendarIcon className="w-5 h-5 text-primary" />
                   Rental Start Date
                 </Label>
-                <Popover>
+                <Popover open={startDateOpen} onOpenChange={setStartDateOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -76,7 +92,7 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                     <Calendar
                       mode="single"
                       selected={startDate}
-                      onSelect={setStartDate}
+                      onSelect={handleStartDateSelect}
                       initialFocus
                       className="p-3 pointer-events-auto"
                       disabled={(date) => date < new Date()}
@@ -91,7 +107,7 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                   <CalendarIcon className="w-5 h-5 text-primary" />
                   Rental End Date
                 </Label>
-                <Popover>
+                <Popover open={endDateOpen} onOpenChange={setEndDateOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
@@ -109,7 +125,7 @@ const RentalInquiry: React.FC<RentalInquiryProps> = ({
                     <Calendar
                       mode="single"
                       selected={endDate}
-                      onSelect={setEndDate}
+                      onSelect={handleEndDateSelect}
                       initialFocus
                       className="p-3 pointer-events-auto"
                       disabled={(date) => date < (startDate || new Date())}

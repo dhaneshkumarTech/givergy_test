@@ -127,12 +127,21 @@ const CartPopup = () => {
                   <span className="text-primary">${getTotalPrice().toFixed(2)}</span>
                 </div>
                 
+                {(!startDate || !endDate) && (
+                  <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                    <p className="text-sm text-amber-700 font-medium flex items-center gap-2">
+                      <span>⚠️</span>
+                      Please select rental dates above to proceed with checkout
+                    </p>
+                  </div>
+                )}
+                
                 <Button 
                   className="w-full h-12 bg-gradient-brand text-primary-foreground"
                   onClick={handleCheckout}
                   disabled={items.length === 0}
                 >
-                  Proceed to Checkout
+                  {(!startDate || !endDate) ? 'Select Dates to Checkout' : 'Proceed to Checkout'}
                 </Button>
               </div>
             </>

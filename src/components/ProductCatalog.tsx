@@ -118,8 +118,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     );
   }
 
-  // Get bundle products - we'll use the same bundle for all types and adjust pricing
-  const bundleProducts = products.filter(p => p.category === "Bundle").slice(0, 2); // Take first 2 bundle products
+  const bundleProducts = products.filter(p => p.category === "Bundle").slice(0, 2); 
   const individualProducts = products.filter(p => p.category !== "Bundle");
 
   return (
@@ -127,7 +126,6 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         
-        {/* Bundles Section */}
         <div className="mb-16">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-accent/20 px-4 py-2 rounded-full mb-4">
@@ -141,7 +139,6 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
           </div>
 
 
-          {/* Bundle Products Display */}
           {bundleProducts.length > 0 && (
             <div className="mb-12">
               <div className="grid md:grid-cols-2 gap-8">
@@ -161,7 +158,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                             className="product-image w-full h-full object-contain p-8"
                           />
                           <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                            Bundle of {currentBundleType}
+                            Bundle
                           </Badge>
                         </div>
                         
@@ -175,7 +172,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                             {bundle.description}
                           </div>
                           
-                          <div className="text-center mb-4">
+                          <div className="text-center mb-4 border-t pt-4">
                             <p className="text-lg font-semibold">${adjustedPrice.toFixed(2)}</p>
                             <p className="text-sm text-muted-foreground">per bundle of {currentBundleType}</p>
                             {currentBundleQuantity > 1 && (
@@ -184,7 +181,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                               </p>
                             )}
                           </div>
-                           <div className="flex justify-center items-center gap-4 mb-4">
+                           <div className="flex justify-center items-end gap-4 mb-4">
                             <div className="flex items-center gap-2">
                               <label className="text-sm font-medium">Bundle Type:</label>
                               <Select value={currentBundleType} onValueChange={type => {
@@ -383,7 +380,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
         </div>
 
         {/* Proceed to Checkout Section */}
-        <div className="mt-16 text-center border-t pt-12">
+        <div className="mt-16 text-center border-t pt-12 mb-12">
           <div className="max-w-md mx-auto space-y-4">
             <h3 className="text-xl font-bold">Ready to proceed?</h3>
             <p className="text-muted-foreground">

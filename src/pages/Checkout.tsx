@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Package, Download, CreditCard, FileText } from 'lucide-react';
+import { ArrowLeft, Package, Download, CreditCard, FileText, ShoppingCart, Calendar, MapPin, User, Mail, Phone, Building } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -46,6 +46,7 @@ const Checkout = () => {
   const [orderCreated, setOrderCreated] = useState<any>(null);
   const [processingPayment, setProcessingPayment] = useState(false);
   const [generatingQuote, setGeneratingQuote] = useState(false);
+  const [creatingOrder, setCreatingOrder] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -111,20 +112,31 @@ const Checkout = () => {
   const totalAmount = subtotal + totalShipping;
 
   const downloadQuote = async () => {
-    if (!orderCreated) {
-      // Create a temporary order for quote generation
-      if (!shippingCost) {
-        toast.error('Please enter a valid ZIP code to calculate shipping');
-        return;
-      }
+    setGeneratingQuote(true);
+    
+    try {
+      let orderId = orderCreated?.order_id;
       
-      try {
+      // If no order exists yet, create a temporary one for quote generation
+      if (!orderId) {
+        if (!shippingCost) {
+          toast.error('Please enter a valid ZIP code to calculate shipping');
+          return;
+        }
+        
+        // Validate required form fields
+        const formData = form.getValues();
+        if (!formData.name || !formData.email || !formData.phone || !formData.company || !formData.event_name) {
+          toast.error('Please fill in all required fields to generate a quote');
+          return;
+        }
+        
         const tempOrderData = {
           customerData: {
-            ...form.getValues(),
-            event_date: form.getValues().event_date,
-            event_end_date: form.getValues().event_end_date,
-            postal_code: form.getValues().postal_code,
+            ...formData,
+            event_date: formData.event_date,
+            event_end_date: formData.event_end_date,
+            postal_code: formData.postal_code,
             shipping_details: addressInfo
           },
           cartItems: items,
@@ -140,48 +152,26 @@ const Checkout = () => {
         });
 
         if (error) throw error;
-
-        // Generate quote with temporary order
-        const { data: pdfData, error: pdfError } = await supabase.functions.invoke('generate-pdf', {
-          body: { orderId: quoteResult.order_id, type: 'quote' }
-        });
-        
-        if (pdfError) throw pdfError;
-        
-        // Create and download the quote file
-        const blob = new Blob([pdfData.html], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = pdfData.filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        toast.success('Quote downloaded successfully!');
-        return;
-      } catch (error) {
-        console.error('Error generating quote:', error);
-        toast.error('Failed to generate quote');
-        return;
+        orderId = quoteResult.order_id;
       }
-    }
-    
-    setGeneratingQuote(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-pdf', {
-        body: { orderId: orderCreated.order_id, type: 'quote' }
+
+      // Generate quote PDF
+      const { data: pdfData, error: pdfError } = await supabase.functions.invoke('generate-pdf', {
+        body: { orderId: orderId, type: 'quote' }
       });
       
-      if (error) throw error;
+      if (pdfError) throw pdfError;
+      
+      if (!pdfData || !pdfData.html) {
+        throw new Error('No PDF data received');
+      }
       
       // Create and download the quote file
-      const blob = new Blob([data.html], { type: 'text/html' });
+      const blob = new Blob([pdfData.html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = data.filename;
+      a.download = pdfData.filename || `quote_${new Date().getTime()}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -190,7 +180,7 @@ const Checkout = () => {
       toast.success('Quote downloaded successfully!');
     } catch (error) {
       console.error('Error generating quote:', error);
-      toast.error('Failed to generate quote');
+      toast.error(`Failed to generate quote: ${error.message || 'Unknown error'}`);
     } finally {
       setGeneratingQuote(false);
     }
@@ -215,11 +205,17 @@ const Checkout = () => {
   };
 
   const onSubmit = async (data: FormData) => {
+    if (creatingOrder) {
+      return; // Prevent double submission
+    }
+    
     if (!shippingCost) {
       toast.error('Please enter a valid ZIP code to calculate shipping');
       return;
     }
 
+    setCreatingOrder(true);
+    
     try {
       const orderData = {
         customerData: {
@@ -240,22 +236,35 @@ const Checkout = () => {
         body: orderData
       });
 
-      if (error) throw error;
+      if (error) {
+        throw new Error(error.message || 'Failed to create order');
+      }
+
+      if (!orderResult || !orderResult.order_id) {
+        throw new Error('Invalid order response received');
+      }
 
       setOrderCreated(orderResult);
       toast.success('Order created successfully!');
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error('Failed to create order');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create order';
+      toast.error(errorMessage);
+    } finally {
+      setCreatingOrder(false);
     }
   };
 
   if (items.length === 0) {
     return (
-      <div className="min-h-screen bg-background py-16 px-4">
+      <div className="min-h-screen bg-gradient-subtle py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <Button onClick={() => navigate('/')} className="gap-2">
+          <div className="mb-8">
+            <ShoppingCart className="w-24 h-24 mx-auto text-muted-foreground mb-4" />
+            <h1 className="text-3xl font-bold mb-4 bg-gradient-brand bg-clip-text text-transparent">Your cart is empty</h1>
+            <p className="text-muted-foreground mb-6">Add some items to get started with your order</p>
+          </div>
+          <Button onClick={() => navigate('/')} className="gap-2 bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1">
             <ArrowLeft className="w-4 h-4" />
             Continue Shopping
           </Button>
@@ -266,23 +275,28 @@ const Checkout = () => {
 
   if (orderCreated) {
     return (
-      <div className="min-h-screen bg-background py-16 px-4">
+      <div className="min-h-screen bg-gradient-subtle py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <Card className="border-green-200 bg-green-50/50">
+          <Card className="border-green-200 bg-green-50/50 shadow-elegant">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-green-700">Order Created Successfully!</CardTitle>
-              <p className="text-green-600">Order Number: {orderCreated.order_number}</p>
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package className="w-8 h-8 text-green-600" />
+              </div>
+              <CardTitle className="text-3xl text-green-700 mb-2">Order Created Successfully!</CardTitle>
+              <p className="text-green-600 font-medium">Order Number: {orderCreated.order_number}</p>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="text-center space-y-4">
-                <p className="text-lg">Total Amount: <span className="font-bold text-primary">${orderCreated.amount.toFixed(2)}</span></p>
+                <div className="p-4 bg-white/50 rounded-lg border border-green-200">
+                  <p className="text-lg">Total Amount: <span className="font-bold text-2xl text-primary">${orderCreated.amount.toFixed(2)}</span></p>
+                </div>
                 
                 <div className="flex gap-4 justify-center flex-wrap">
                   <Button 
                     onClick={downloadQuote}
                     disabled={generatingQuote}
                     variant="outline"
-                    className="gap-2"
+                    className="gap-2 hover:shadow-md transition-all duration-300"
                   >
                     {generatingQuote ? (
                       <>Generating...</>
@@ -297,7 +311,7 @@ const Checkout = () => {
                   <Button 
                     onClick={processPayment}
                     disabled={processingPayment}
-                    className="gap-2 bg-gradient-brand text-primary-foreground"
+                    className="gap-2 bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1"
                   >
                     {processingPayment ? (
                       <>Processing...</>
@@ -313,7 +327,7 @@ const Checkout = () => {
                 <Button 
                   onClick={() => navigate('/')}
                   variant="ghost"
-                  className="gap-2"
+                  className="gap-2 hover:bg-gradient-brand hover:text-white transition-all duration-300"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to Home
@@ -327,14 +341,14 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-16 px-4">
+    <div className="min-h-screen bg-gradient-subtle py-16 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <div className="flex gap-4 mb-4">
             <Button 
               variant="ghost" 
               onClick={() => navigate('/')}
-              className="gap-2 hover:bg-gradient-brand hover:text-white"
+              className="gap-2 hover:bg-gradient-brand hover:text-white hover:shadow-lg transition-all duration-300 transform "
             >
               <ArrowLeft className="w-4 h-4" />
               Back to Shopping
@@ -343,7 +357,7 @@ const Checkout = () => {
               variant="outline" 
               onClick={downloadQuote}
               disabled={generatingQuote}
-              className="gap-2"
+              className="gap-2 hover:bg-gradient-brand hover:text-white hover:shadow-lg transition-all duration-300 transform "
             >
               {generatingQuote ? (
                 <>Generating...</>
@@ -355,39 +369,39 @@ const Checkout = () => {
               )}
             </Button>
           </div>
-          <h1 className="text-3xl font-bold">Checkout</h1>
+          <h1 className="text-4xl font-bold bg-gradient-brand bg-clip-text text-transparent">Checkout</h1>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-10">
           <div className="space-y-6">
             {/* Cart Items */}
-            <Card>
+            <Card className="shadow-elegant hover:border-primary/80  transition-shadow duration-300">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 text-primary">
                   <Package className="w-5 h-5" />
                   Order Summary
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.id} className="flex gap-4 p-4 border rounded-lg">
+                  <div key={item.id} className="flex gap-4 p-4 border rounded-lg hover:shadow-lg transition-all duration-300 hover:border-primary/30">
                     <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
                       <img 
                         src={item.image} 
                         alt={item.title}
-                        className="w-full h-full"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                       />
                     </div>
                     <div className="flex-1">
                       <Badge variant="outline" className="text-xs mb-1 bg-gradient-brand text-primary-foreground">
                         {item.category}
                       </Badge>
-                      <h4 className="font-semibold text-sm mb-2">{item.title}</h4>
+                      <h4 className="font-semibold text-lg mb-2 text-foreground">{item.title}</h4>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-muted-foreground">
                           Qty: {item.quantity}
                         </span>
-                        <span className="font-medium">
+                        <span className="font-bold text-primary">
                           ${(item.price * item.quantity).toFixed(2)}
                         </span>
                       </div>
@@ -398,14 +412,16 @@ const Checkout = () => {
             </Card>
 
             {/* Shipping Summary */}
-            <Card>
+            <Card className="shadow-elegant hover:border-primary/80 transition-shadow duration-300">
               <CardHeader>
-                <CardTitle>Shipping & Collection Summary</CardTitle>
+                <CardTitle className="text-primary">
+                  Shipping & Collection Summary
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between text-sm">
                   <span>Subtotal:</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span className="font-medium">${subtotal.toFixed(2)}</span>
                 </div>
                 
                 <p className="text-sm text-muted-foreground italic">
@@ -414,28 +430,28 @@ const Checkout = () => {
                 
                 {shippingCost ? (
                   <div className="space-y-3 pt-4 border-t">
-                    <div className="text-sm text-green-600 mb-2">
-                      Shipping Zone: {shippingCost.zone_name}
+                    <div className="text-sm text-green-600 mb-2 font-medium">
+                      📍 Shipping Zone: {shippingCost.zone_name}
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Shipping Cost:</span>
-                      <span>${shippingCost.shipping_cost.toFixed(2)}</span>
+                      <span className="font-medium">${shippingCost.shipping_cost.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Collection Cost:</span>
-                      <span>${shippingCost.collection_cost.toFixed(2)}</span>
+                      <span className="font-medium">${shippingCost.collection_cost.toFixed(2)}</span>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-3 pt-4 border-t">
-                    <p className="text-sm text-primary">
-                      Enter ZIP code to calculate shipping costs
+                    <p className="text-sm text-primary font-medium">
+                      📍 Enter ZIP code to calculate shipping costs
                     </p>
                   </div>
                 )}
                 
-                <div className="pt-4 border-t">
-                  <div className="flex justify-between text-lg font-bold">
+                <div className="pt-4 border-t bg-gradient-brand/5 -mx-6 -mb-6 px-6 pb-6 rounded-b-lg">
+                  <div className="flex justify-between text-xl font-bold">
                     <span>Total Amount:</span>
                     <span className="text-primary">${totalAmount.toFixed(2)}</span>
                   </div>
@@ -445,9 +461,9 @@ const Checkout = () => {
           </div>
 
           <div className="space-y-6">
-            <Card>
+            <Card className="shadow-elegant hover:border-primary/80 transition-shadow duration-300">
               <CardHeader>
-                <CardTitle>Delivery Information</CardTitle>
+                <CardTitle className="text-primary">Delivery Information</CardTitle>
               </CardHeader>
               <CardContent>
                 <Form {...form}>
@@ -458,9 +474,9 @@ const Checkout = () => {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Name *</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><User className="w-4 h-4" /> Name *</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -472,9 +488,9 @@ const Checkout = () => {
                         name="email"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Email *</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><Mail className="w-4 h-4" /> Email *</FormLabel>
                             <FormControl>
-                              <Input type="email" {...field} />
+                              <Input type="email" {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -488,9 +504,9 @@ const Checkout = () => {
                         name="phone"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Phone Number *</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><Phone className="w-4 h-4" /> Phone Number *</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -502,9 +518,9 @@ const Checkout = () => {
                         name="company"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Company Name *</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><Building className="w-4 h-4" /> Company Name *</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -517,9 +533,9 @@ const Checkout = () => {
                       name="event_name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Event Name *</FormLabel>
+                          <FormLabel className="flex items-center gap-2"><Package className="w-4 h-4" /> Event Name *</FormLabel>
                           <FormControl>
-                            <Input {...field} />
+                            <Input {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -532,9 +548,9 @@ const Checkout = () => {
                         name="event_date"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Event Start</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Event Start</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Input type="date" {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -546,9 +562,9 @@ const Checkout = () => {
                         name="event_end_date"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Event End</FormLabel>
+                            <FormLabel className="flex items-center gap-2"><Calendar className="w-4 h-4" /> Event End</FormLabel>
                             <FormControl>
-                              <Input type="date" {...field} />
+                              <Input type="date" {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -561,12 +577,13 @@ const Checkout = () => {
                       name="postal_code"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>ZIP Code *</FormLabel>
+                          <FormLabel className="flex items-center gap-2"><MapPin className="w-4 h-4" /> ZIP Code *</FormLabel>
                           <FormControl>
                             <Input 
                               placeholder="Enter ZIP Code For USA" 
                               {...field}
                               disabled={shippingLoading}
+                              className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200"
                             />
                           </FormControl>
                           <FormMessage />
@@ -575,9 +592,9 @@ const Checkout = () => {
                     />
 
                     {addressInfo && (
-                      <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg shadow-sm animate-in slide-in-from-top-2 duration-300">
                         <p className="text-sm text-green-700">
-                          <strong>Detected Address:</strong> {addressInfo}
+                          <strong className="flex items-center gap-2">✅ Detected Address:</strong> {addressInfo}
                         </p>
                       </div>
                     )}
@@ -587,11 +604,12 @@ const Checkout = () => {
                       name="shipping_details"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Shipping Details</FormLabel>
+                          <FormLabel className="flex items-center gap-2"><MapPin className="w-4 h-4" /> Shipping Details</FormLabel>
                           <FormControl>
                             <Textarea 
                               placeholder="Additional shipping details (auto-filled from ZIP code)" 
-                              {...field} 
+                              {...field}
+                              className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200"
                             />
                           </FormControl>
                           <FormMessage />
@@ -604,9 +622,9 @@ const Checkout = () => {
                       name="message"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Message</FormLabel>
+                          <FormLabel className="flex items-center gap-2"><FileText className="w-4 h-4" /> Message</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Any additional notes..." {...field} />
+                            <Textarea placeholder="Any additional notes..." {...field} className="hover:ring-2 hover:ring-primary/20 focus:border-primary transition-all duration-200" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -615,10 +633,16 @@ const Checkout = () => {
 
                     <Button 
                       type="submit" 
-                      className="w-full h-12 text-base bg-gradient-brand text-primary-foreground"
-                      disabled={!shippingCost || shippingLoading || !form.formState.isValid || !form.getValues().name || !form.getValues().email || !form.getValues().phone || !form.getValues().company || !form.getValues().event_name || !form.getValues().postal_code}
+                      className="w-full h-12 text-base bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1"
+                      disabled={creatingOrder || !shippingCost || shippingLoading || !form.formState.isValid || !form.getValues().name || !form.getValues().email || !form.getValues().phone || !form.getValues().company || !form.getValues().event_name || !form.getValues().postal_code}
                     >
-                      {shippingLoading ? 'Calculating...' : 'Create Order & Continue'}
+                      {shippingLoading ? (
+                        <><ShoppingCart className="w-4 h-4 mr-2 animate-spin" /> Calculating...</>
+                      ) : creatingOrder ? (
+                        <><Package className="w-4 h-4 mr-2 animate-spin" /> Creating Order...</>
+                      ) : (
+                        <><CreditCard className="w-4 h-4 mr-2" /> Create Order & Continue</>
+                      )}
                     </Button>
                   </form>
                 </Form>
