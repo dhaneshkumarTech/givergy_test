@@ -55,20 +55,20 @@ serve(async (req) => {
 
     const state = stateComponent.short_name;
 
-    // Look up shipping costs by state
+    // Look up shipping costs by ZIP code first
     const { data: shippingZone, error } = await supabase
       .from('shipping_zones')
       .select('*')
-      .eq('state', state)
+      .eq('zip_code', cleanZipCode)
       .single();
 
     if (error && error.code !== 'PGRST116') {
-      throw error;
+      console.error('Database error:', error);
     }
 
-    // If no exact match, apply default shipping costs
+    // If no exact ZIP match, apply default shipping costs based on state
     const shipping = shippingZone || {
-      zone_name: 'Standard Zone',
+      zone_name: `${state} Zone`,
       shipping_cost: 75.00,
       collection_cost: 75.00
     };

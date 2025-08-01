@@ -13,6 +13,8 @@ serve(async (req) => {
 
   try {
     const { orderId, type } = await req.json(); // type: 'quote' or 'receipt'
+    
+    console.log('Generating PDF for order:', orderId, 'type:', type);
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -35,8 +37,15 @@ serve(async (req) => {
       .single();
 
     if (orderError) {
-      throw orderError;
+      console.error('Order query error:', orderError);
+      throw new Error(`Failed to fetch order: ${orderError.message}`);
     }
+
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    console.log('Order data:', JSON.stringify(order, null, 2));
 
     // Generate HTML content for PDF
     const htmlContent = generateHTMLContent(order, type);
@@ -391,14 +400,19 @@ function generateHTMLContent(order: any, type: string) {
             </tr>
           </thead>
           <tbody>
-            ${order.order_items.map((item: any) => `
+            ${(order.order_items || []).map((item: any) => `
               <tr>
-                <td class="product-name">${item.product_title}</td>
-                <td class="price-cell">$${Number(item.product_price).toFixed(2)}</td>
-                <td style="text-align: center; font-weight: 600;">${item.quantity}</td>
-                <td class="price-cell">$${Number(item.line_total).toFixed(2)}</td>
+                <td class="product-name">${item.product_title || 'Unknown Item'}</td>
+                <td class="price-cell">$${Number(item.product_price || 0).toFixed(2)}</td>
+                <td style="text-align: center; font-weight: 600;">${item.quantity || 0}</td>
+                <td class="price-cell">$${Number(item.line_total || 0).toFixed(2)}</td>
               </tr>
             `).join('')}
+            ${(!order.order_items || order.order_items.length === 0) ? `
+              <tr>
+                <td class="product-name" colspan="4" style="text-align: center; color: #6b7280; font-style: italic;">No items found</td>
+              </tr>
+            ` : ''}
           </tbody>
         </table>
       </div>

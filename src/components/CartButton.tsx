@@ -10,16 +10,18 @@ const CartButton = () => {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
       onClick={openCart}
-      className="cart-button relative gap-2 hover:bg-gradient-brand hover:text-white border-primary/80"
+      className="cart-button relative group bg-white/80 backdrop-blur-sm border border-primary/20 rounded-full px-4 py-2 h-12 shadow-lg hover:shadow-xl hover:bg-gradient-brand hover:text-white transition-all duration-300 transform hover:-translate-y-1"
     >
-      <ShoppingCart className="w-4 h-4" />
-      Cart
+      <div className="flex items-center gap-2">
+        <ShoppingCart className="w-5 h-5 transition-transform duration-300 group-hover:scale-110" />
+        <span className="font-medium">Cart</span>
+      </div>
       {totalItems > 0 && (
         <Badge 
-          variant="default" 
-          className="absolute -top-2 -right-2 h-5 w-5 p-0 flex items-center justify-center text-xs"
+          variant="destructive" 
+          className="absolute -top-1 -right-1 h-6 w-6 p-0 flex items-center justify-center text-xs font-bold bg-red-500 text-white border-2 border-white rounded-full animate-pulse shadow-lg"
         >
           {totalItems}
         </Badge>

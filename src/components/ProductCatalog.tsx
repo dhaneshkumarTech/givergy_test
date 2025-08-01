@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCartStore } from "@/store/cart";
 import { useProducts } from "@/hooks/useProducts";
 import { ShoppingCart, Package, Tablet, Award, Clock, CheckCircle, Plus, Minus, Loader2 } from "lucide-react";
@@ -14,6 +15,8 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
   const { addItem, getTotalItems } = useCartStore();
   const { products, loading, error } = useProducts();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
+  const [bundleTypes, setBundleTypes] = useState<{ [key: string]: string }>({});
+  const [bundleQuantities, setBundleQuantities] = useState<{ [key: string]: number }>({});
 
   const getQuantity = (id: string, isBundle: boolean = false) => {
     return quantities[id] || (isBundle ? 1 : 3);
@@ -27,13 +30,29 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     }));
   };
 
-  const createFlyingAnimation = (event: React.MouseEvent, item: any) => {
+  // Bundle pricing logic based on type
+  const getBundlePricing = (basePrice: number, bundleType: string) => {
+    const prices = { "3": 199, "5": 305, "10": 500 };
+    return prices[bundleType as keyof typeof prices] || 199;
+  };
+
+  const createFlyingAnimation = (event: React.MouseEvent, item: any, quantity: number = 1) => {
     const button = event.currentTarget as HTMLButtonElement;
     const card = button.closest('.product-card') as HTMLElement;
     const productImg = card?.querySelector('.product-image') as HTMLImageElement;
     const cartButton = document.querySelector('.cart-button') as HTMLElement;
     
-    if (!productImg || !cartButton) return;
+    if (!productImg || !cartButton) {
+      // Fallback: directly add to cart without animation
+      addItem({
+        id: item.id,
+        title: item.title,
+        price: item.price,
+        image: item.image_url,
+        category: item.category
+      }, quantity);
+      return;
+    }
 
     // Create flying image
     const flyingImg = productImg.cloneNode(true) as HTMLImageElement;
@@ -65,10 +84,10 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     
     // Clean up after animation
     setTimeout(() => {
-      document.body.removeChild(flyingImg);
+      if (document.body.contains(flyingImg)) {
+        document.body.removeChild(flyingImg);
+      }
       // Add item after animation completes
-      const isBundle = item.category.startsWith('Bundle');
-      const quantity = getQuantity(item.id, isBundle);
       addItem({
         id: item.id,
         title: item.title,
@@ -99,17 +118,14 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
     );
   }
 
-  const bundle3 = products.filter(p => p.category === "Bundle");
-  const bundle5 = products.filter(p => p.category === "Bundle");
-  const bundle10 = products.filter(p => p.category === "Bundle");
-  const individualProducts = products.filter(p => p.category != "Bundle");
+  const bundleProducts = products.filter(p => p.category === "Bundle").slice(0, 2); 
+  const individualProducts = products.filter(p => p.category !== "Bundle");
 
   return (
     <div id="products-section">
     <div className="bg-background px-4">
       <div className="max-w-6xl mx-auto">
         
-        {/* Bundles Section */}
         <div className="mb-16">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 bg-accent/20 px-4 py-2 rounded-full mb-4">
@@ -122,74 +138,114 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
             </p>
           </div>
 
-          {/* Bundle Type 3 */}
-          {bundle3.length > 0 && (
+
+          {bundleProducts.length > 0 && (
             <div className="mb-12">
               <div className="grid md:grid-cols-2 gap-8">
-                {bundle3.map((bundle) => (
-                  <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
-                    <CardContent className="p-0">
-                      <div className="relative h-60 from-muted to-muted/50">
-                        <img 
-                          src={bundle.image_url} 
-                          alt={bundle.title}
-                          className="product-image w-full h-full object-contain p-8"
-                        />
-                        <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
-                          {bundle.category}
-                        </Badge>
-                      </div>
-                      
-                      <div className="p-6">
-                        <h4 className="font-bold text-lg text-center mb-2 transition-colors">
-                          {bundle.title}
-                        </h4>
-                        
-                        <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
-                          {bundle.description}
+                {bundleProducts.map((bundle) => {
+                  const currentBundleType = bundleTypes[bundle.id] || "3";
+                  const currentBundleQuantity = bundleQuantities[bundle.id] || 1;
+                  const adjustedPrice = getBundlePricing(bundle.price, currentBundleType);
+                  const totalPrice = adjustedPrice * currentBundleQuantity;
+                  
+                  return (
+                    <Card key={bundle.id} className="product-card group transition-all duration-300 border hover:border-primary/80 overflow-hidden">
+                      <CardContent className="p-0">
+                        <div className="relative h-60 from-muted to-muted/50">
+                          <img 
+                            src={bundle.image_url} 
+                            alt={bundle.title}
+                            className="product-image w-full h-full object-contain p-8"
+                          />
+                          <Badge className="absolute top-4 left-4 mb-2 bg-gradient-brand text-primary-foreground">
+                            Bundle
+                          </Badge>
                         </div>
                         
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <p className="text-lg font-semibold">${bundle.price.toFixed(2)}</p>
-                            <p className="text-sm text-muted-foreground">per bundle</p>
+                        <div className="p-6">
+                          <h4 className="font-bold text-lg text-center mb-2 transition-colors">
+                            {bundle.title.replace('Bundle', `Bundle of ${currentBundleType}`)}
+                          </h4>
+                          
+                         
+                          <div className="text-muted-foreground text-sm mb-4 leading-relaxed whitespace-pre-line">
+                            {bundle.description}
                           </div>
                           
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) - 1, true)}
-                            >
-                              <Minus className="w-3 h-3" />
-                            </Button>
-                            <span className="w-8 text-center font-medium">
-                              {getQuantity(bundle.id, true)}
-                            </span>
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="h-8 w-8"
-                              onClick={() => updateQuantity(bundle.id, getQuantity(bundle.id, true) + 1, true)}
-                            >
-                              <Plus className="w-3 h-3" />
-                            </Button>
+                          <div className="text-center mb-4 border-t pt-4">
+                            <p className="text-lg font-semibold">${adjustedPrice.toFixed(2)}</p>
+                            <p className="text-sm text-muted-foreground">per bundle of {currentBundleType}</p>
+                            {currentBundleQuantity > 1 && (
+                              <p className="text-sm font-medium text-primary mt-1">
+                                Total: ${totalPrice.toFixed(2)} ({currentBundleQuantity} × ${adjustedPrice.toFixed(2)})
+                              </p>
+                            )}
                           </div>
+                           <div className="flex justify-center items-end gap-4 mb-4">
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium">Bundle Type:</label>
+                              <Select value={currentBundleType} onValueChange={type => {
+                                setBundleTypes(prev => ({ ...prev, [bundle.id]: type }));
+                                setBundleQuantities(prev => ({ ...prev, [bundle.id]: 1 })); // Reset quantity on type change
+                              }}>
+                                <SelectTrigger className="w-[140px]">
+                                  <SelectValue placeholder="Select type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="3">Bundle of 3</SelectItem>
+                                  <SelectItem value="5">Bundle of 5</SelectItem>
+                                  <SelectItem value="10">Bundle of 10</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <label className="text-sm font-medium">Quantity:</label>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setBundleQuantities(prev => ({ ...prev, [bundle.id]: Math.max(1, currentBundleQuantity - 1) }))}
+                                >
+                                  <Minus className="w-3 h-3" />
+                                </Button>
+                                <span className="w-8 text-center font-medium">{currentBundleQuantity}</span>
+                                <Button
+                                  variant="outline"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => setBundleQuantities(prev => ({ ...prev, [bundle.id]: currentBundleQuantity + 1 }))}
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            variant="outline"
+                            className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
+                            onClick={(e) => {
+                              const bundleWithAdjustedPrice = {
+                                ...bundle,
+                                id: `${bundle.id}-${currentBundleType}`, // Make ID unique per bundle type
+                                price: adjustedPrice,
+                                title: bundle.title.replace('Bundle', `Bundle of ${currentBundleType}`),
+                                category: `Bundle-${currentBundleType}`
+                              };
+                              // Add the bundle with the selected quantity
+                              createFlyingAnimation(e, bundleWithAdjustedPrice, currentBundleQuantity);
+                            }}
+                          >
+                            <ShoppingCart className="w-4 h-4" />
+                            Add to Cart
+                          </Button>
                         </div>
-                        
-                        <Button 
-                          variant="outline"
-                          className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground hover:bg-gradient-brand/90 transition-all"
-                          onClick={(e) => createFlyingAnimation(e, bundle)}
-                        >
-                          <ShoppingCart className="w-4 h-4" />
-                          Add to Cart
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -265,7 +321,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                       <Button 
                         variant="outline"
                         className="w-full gap-2 group-hover:bg-gradient-brand group-hover:text-primary-foreground transition-all"
-                        onClick={(e) => createFlyingAnimation(e, product)}
+                        onClick={(e) => createFlyingAnimation(e, product, getQuantity(product.id, false))}
                       >
                         <ShoppingCart className="w-4 h-4" />
                         Add to Cart
@@ -324,7 +380,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
         </div>
 
         {/* Proceed to Checkout Section */}
-        <div className="mt-16 text-center border-t pt-12">
+        <div className="mt-16 text-center border-t pt-12 mb-12">
           <div className="max-w-md mx-auto space-y-4">
             <h3 className="text-xl font-bold">Ready to proceed?</h3>
             <p className="text-muted-foreground">
