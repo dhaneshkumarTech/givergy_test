@@ -634,7 +634,7 @@ const Checkout = () => {
                     <Button 
                       type="submit" 
                       className="w-full h-12 text-base bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1"
-                      disabled={creatingOrder || !shippingCost || shippingLoading || !form.formState.isValid || !form.getValues().name || !form.getValues().email || !form.getValues().phone || !form.getValues().company || !form.getValues().event_name || !form.getValues().postal_code}
+                      disabled={creatingOrder || !shippingCost || shippingLoading}
                     >
                       {shippingLoading ? (
                         <><ShoppingCart className="w-4 h-4 mr-2 animate-spin" /> Calculating...</>
