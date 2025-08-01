@@ -24,18 +24,61 @@ serve(async (req) => {
     }
 
     const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
+    
+    // If no Google API key, use fallback
     if (!googleApiKey) {
-      throw new Error('Google Maps API key not configured');
+      console.log('No Google API key, using fallback');
+      return new Response(JSON.stringify({
+        formatted_address: `${cleanZipCode}, USA`,
+        city: 'Unknown City',
+        state: 'Unknown',
+        country: 'US',
+        zipCode: cleanZipCode,
+        full_address: `Unknown City, Unknown ${cleanZipCode}, US`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
     }
 
-    // Use Google Geocoding API to get address details from ZIP code
-    const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`;
-    
-    const response = await fetch(geocodeUrl);
-    const data = await response.json();
+    let data;
+    try {
+      // Use Google Geocoding API to get address details from ZIP code
+      const geocodeUrl = `https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`;
+      const response = await fetch(geocodeUrl);
+      data = await response.json();
 
-    if (data.status !== 'OK' || !data.results.length) {
-      throw new Error('Invalid ZIP code or no results found');
+      if (data.status === 'OVER_QUERY_LIMIT') {
+        console.log('Google API rate limit hit, using fallback');
+        return new Response(JSON.stringify({
+          formatted_address: `${cleanZipCode}, USA`,
+          city: 'Unknown City',
+          state: 'Unknown',
+          country: 'US',
+          zipCode: cleanZipCode,
+          full_address: `Unknown City, Unknown ${cleanZipCode}, US`
+        }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200
+        });
+      }
+
+      if (data.status !== 'OK' || !data.results.length) {
+        throw new Error('Invalid ZIP code or no results found');
+      }
+    } catch (apiError) {
+      console.log('Google API error, using fallback:', apiError);
+      return new Response(JSON.stringify({
+        formatted_address: `${cleanZipCode}, USA`,
+        city: 'Unknown City',
+        state: 'Unknown',
+        country: 'US',
+        zipCode: cleanZipCode,
+        full_address: `Unknown City, Unknown ${cleanZipCode}, US`
+      }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
+      });
     }
 
     const result = data.results[0];

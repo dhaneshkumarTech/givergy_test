@@ -79,9 +79,19 @@ serve(async (req) => {
         price = 0;
       }
       
+      // Clean product_id to remove any suffixes (e.g., "-3", "-5")
+      let productId = item.id;
+      if (typeof productId === 'string' && productId.includes('-')) {
+        // Split by dashes and take the first 5 parts (UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+        const parts = productId.split('-');
+        if (parts.length > 5) {
+          productId = parts.slice(0, 5).join('-');
+        }
+      }
+      
       return {
         order_id: order.id,
-        product_id: item.id,
+        product_id: productId,
         product_title: item.title,
         product_price: price,
         quantity: item.quantity,

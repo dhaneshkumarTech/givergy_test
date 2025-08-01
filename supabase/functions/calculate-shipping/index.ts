@@ -29,31 +29,37 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? ''
     );
 
-    // Get state from address using Google Maps API
+    // Get state from address using Google Maps API with fallback
     const googleApiKey = Deno.env.get('GOOGLE_MAPS_API_KEY');
-    if (!googleApiKey) {
-      throw new Error('Google Maps API key not configured');
-    }
+    let state = 'CA'; // Default fallback state
     
-    const addressResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`);
-    const addressData = await addressResponse.json();
-    
-    if (addressData.status !== 'OK' || !addressData.results || addressData.results.length === 0) {
-      console.error('Google Maps API response:', addressData);
-      throw new Error(`Invalid ZIP code: ${addressData.status || 'No results found'}`);
+    if (googleApiKey) {
+      try {
+        const addressResponse = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${cleanZipCode}&key=${googleApiKey}&components=country:US`);
+        const addressData = await addressResponse.json();
+
+        if (addressData.status === 'OVER_QUERY_LIMIT') {
+          console.log('Google API rate limit hit, using default state');
+        } else if (addressData.status === 'OK' && addressData.results && addressData.results.length > 0) {
+          // Extract state from address components
+          const addressComponents = addressData.results[0].address_components;
+          const stateComponent = addressComponents.find((component) =>
+            component.types.includes('administrative_area_level_1')
+          );
+          
+          if (stateComponent) {
+            state = stateComponent.short_name;
+          }
+        } else {
+          console.log('No results from Google API, using default state');
+        }
+      } catch (apiError) {
+        console.log('Google API error, using default state:', apiError);
+      }
+    } else {
+      console.log('No Google API key, using default state');
     }
 
-    // Extract state from address components
-    const addressComponents = addressData.results[0].address_components;
-    const stateComponent = addressComponents.find((component: any) => 
-      component.types.includes('administrative_area_level_1')
-    );
-    
-    if (!stateComponent) {
-      throw new Error('Could not determine state from ZIP code');
-    }
-
-    const state = stateComponent.short_name;
 
     // Look up shipping costs by state
     const { data: shippingZone, error } = await supabase
