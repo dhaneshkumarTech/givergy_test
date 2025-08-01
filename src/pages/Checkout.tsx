@@ -38,7 +38,7 @@ interface ShippingCost {
 
 const Checkout = () => {
   const { items, getTotalItems, getTotalPrice, startDate, endDate, clearCart } = useCartStore();
-  const { calculateShipping, getAddress, loading: shippingLoading } = useShipping();
+  const { calculateShipping, getAddress } = useShipping();
   const navigate = useNavigate();
   
   const [shippingCost, setShippingCost] = useState<ShippingCost | null>(null);
@@ -47,6 +47,7 @@ const Checkout = () => {
   const [processingPayment, setProcessingPayment] = useState(false);
   const [generatingQuote, setGeneratingQuote] = useState(false);
   const [creatingOrder, setCreatingOrder] = useState(false);
+  const [shippingLoading, setShippingLoading] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -83,6 +84,7 @@ const Checkout = () => {
     }
 
     const fetchShippingAndAddress = async () => {
+      setShippingLoading(true);
       try {
         const [shippingData, addressData] = await Promise.all([
           calculateShipping(cleanZip),
@@ -101,6 +103,8 @@ const Checkout = () => {
         console.error('Error fetching shipping info:', error);
         setShippingCost(null);
         setAddressInfo('');
+      } finally {
+        setShippingLoading(false);
       }
     };
 

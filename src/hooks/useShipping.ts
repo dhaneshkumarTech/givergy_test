@@ -22,9 +22,6 @@ export const useShipping = () => {
   const [error, setError] = useState<string | null>(null);
 
   const calculateShipping = async (zipCode: string): Promise<ShippingInfo | null> => {
-    setLoading(true);
-    setError(null);
-    
     try {
       const { data, error } = await supabase.functions.invoke('calculate-shipping', {
         body: { zipCode }
@@ -36,15 +33,10 @@ export const useShipping = () => {
     } catch (err: any) {
       setError(err.message);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
   const getAddress = async (zipCode: string): Promise<AddressInfo | null> => {
-    setLoading(true);
-    setError(null);
-    
     try {
       const { data, error } = await supabase.functions.invoke('get-address', {
         body: { zipCode }
@@ -56,8 +48,6 @@ export const useShipping = () => {
     } catch (err: any) {
       setError(err.message);
       return null;
-    } finally {
-      setLoading(false);
     }
   };
 
