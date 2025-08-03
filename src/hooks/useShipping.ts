@@ -26,7 +26,6 @@ export const useShipping = () => {
       const { data, error } = await supabase.functions.invoke('calculate-shipping', {
         body: { zipCode }
       });
-      
       if (error) throw error;
       
       return data;
