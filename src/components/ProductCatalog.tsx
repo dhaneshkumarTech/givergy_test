@@ -181,12 +181,12 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                               </p>
                             )}
                           </div>
-                           <div className="flex justify-center items-end gap-4 mb-4">
+                           <div className="flex justify-center gap-4 mb-4">
                             <div className="flex items-center gap-2">
                               <label className="text-sm font-medium">Bundle Type:</label>
                               <Select value={currentBundleType} onValueChange={type => {
                                 setBundleTypes(prev => ({ ...prev, [bundle.id]: type }));
-                                setBundleQuantities(prev => ({ ...prev, [bundle.id]: 1 })); // Reset quantity on type change
+                                setBundleQuantities(prev => ({ ...prev, [bundle.id]: 1 }));
                               }}>
                                 <SelectTrigger className="w-[140px]">
                                   <SelectValue placeholder="Select type" />
@@ -229,12 +229,11 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                             onClick={(e) => {
                               const bundleWithAdjustedPrice = {
                                 ...bundle,
-                                id: `${bundle.id}-${currentBundleType}`, // Make ID unique per bundle type
+                                id: `${bundle.id}-${currentBundleType}`, 
                                 price: adjustedPrice,
                                 title: bundle.title.replace('Bundle', `Bundle of ${currentBundleType}`),
                                 category: `Bundle-${currentBundleType}`
                               };
-                              // Add the bundle with the selected quantity
                               createFlyingAnimation(e, bundleWithAdjustedPrice, currentBundleQuantity);
                             }}
                           >
@@ -278,7 +277,7 @@ const ProductCatalog = ({ onRentNow }: ProductCatalogProps) => {
                         />
                       </div>
                       <Badge variant="outline" className="mb-2 bg-gradient-brand text-primary-foreground">{product.category}</Badge>
-                      <h3 className="font-bold text-lg mb-2 transition-colors">
+                      <h3 className="font-bold text-lg transition-colors">
                         {product.title}
                       </h3>
                     </div>
