@@ -356,7 +356,7 @@ const PaymentSuccess = () => {
                 onClick={downloadReceipt}
                 disabled={generatingReceipt}
                 variant="outline"
-                className="gap-2 px-6 py-2 text-sm hover:bg-primary/10"
+                className="gap-2 px-6 py-2 text-sm hover:bg-gradient-brand hover:text-white"
               >
                 {generatingReceipt ? (
                   <>
@@ -373,7 +373,7 @@ const PaymentSuccess = () => {
               
               <Button 
                 onClick={() => navigate('/')}
-                className="gap-2 px-6 py-2 text-sm bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
+                className="gap-2 px-6 py-2 text-sm bg-gradient-brand from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-md"
               >
                 Continue Shopping
                 <ArrowLeft className="w-4 h-4 rotate-180" />

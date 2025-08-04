@@ -79,10 +79,8 @@ serve(async (req) => {
         price = 0;
       }
       
-      // Clean product_id to remove any suffixes (e.g., "-3", "-5")
       let productId = item.id;
       if (typeof productId === 'string' && productId.includes('-')) {
-        // Split by dashes and take the first 5 parts (UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
         const parts = productId.split('-');
         if (parts.length > 5) {
           productId = parts.slice(0, 5).join('-');
@@ -128,8 +126,8 @@ serve(async (req) => {
           },
         ],
         mode: 'payment',
-        success_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:8080'}/payment-success?order_id=${order.id}`,
-        cancel_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:8080'}/checkout`,
+        success_url: `'http://localhost:8080'}/payment-success?order_id=${order.id}`,
+        cancel_url: `'http://localhost:8080'}/checkout`,
         metadata: {
           order_id: order.id,
           order_number: orderNumber

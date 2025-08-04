@@ -8,12 +8,11 @@ import { useNavigate } from "react-router-dom";
 const Index = () => {
   const [startDate, setStartDate] = useState<Date>();
   const [endDate, setEndDate] = useState<Date>();
-  const [showProducts, setShowProducts] = useState(true); // Show products immediately
+  const [showProducts, setShowProducts] = useState(true); 
   const [showDateValidation, setShowDateValidation] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const navigate = useNavigate();
 
-  // Listen for date validation events from CartPopup
   useEffect(() => {
     const handleDateValidation = () => {
       setShowDateValidation(true);
@@ -26,7 +25,6 @@ const Index = () => {
     };
   }, []);
 
-// Do not auto-proceed to checkout when dates are selected
   useEffect(() => {
     if (pendingCheckout && startDate && endDate) {
       const { getTotalItems } = useCartStore.getState();
@@ -34,11 +32,9 @@ const Index = () => {
         useCartStore.getState().setDates(startDate, endDate);
         setPendingCheckout(false);
         setShowDateValidation(false);
-        // User must click checkout
       }
     }
-  }, [startDate, endDate, pendingCheckout]); // Remove navigate dependency to avoid auto-navigation
-
+  }, [startDate, endDate, pendingCheckout]); 
   const handleProceedToCheckout = () => {
     if (startDate && endDate) {
       navigate('/checkout');
@@ -47,14 +43,12 @@ const Index = () => {
     }
   }; 
 
-  // Make handleProceedToCheckout available to be called by user action (e.g. button click)
-
   const handleContinue = () => {
     if (startDate && endDate) {
       useCartStore.getState().setDates(startDate, endDate);
       setShowProducts(true);
       setShowDateValidation(false);
-      setPendingCheckout(false); // Clear any pending checkout
+      setPendingCheckout(false); 
     } else {
       setShowDateValidation(true);
     }
@@ -67,7 +61,6 @@ const Index = () => {
         navigate('/checkout');
       } else {
         setShowDateValidation(true);
-        // Scroll to rental inquiry section
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
