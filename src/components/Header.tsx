@@ -56,28 +56,23 @@ const Header = () => {
         {/* Mobile Layout */}
         <div className="flex md:hidden items-center justify-between">
           {/* Mobile Logos */}
-          <div className="flex items-center gap-4">
-            <div className="w-24 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105">
+          <div className="flex items-center">
+            <div className="w-24 h-12 flex items-center justify-center transition-all duration-300 hover:scale-105">
               <a href="https://www.givergy.com/us/">
-                <img src="/products/givergy.png" alt="Givergy Logo" className="object-contain h-full w-full" />
+                <img src="/products/givergy2.png" alt="Givergy Logo" className="object-contain h-full w-full" />
               </a>
             </div>
-            <div className="w-24 h-10 flex items-center justify-center transition-all duration-300 hover:scale-105">
+            <div className="w-8 h-8 flex items-center justify-center transition-all duration-300  hover:drop-shadow-lg rounded-lg p-2">
+                <img src="/products/cross.png" alt="Partner Logo" className="object-contain h-full w-full" />
+            </div>
+            <div className="w-28 h-12 flex items-center justify-center transition-all duration-300 hover:scale-105">
               <a href="https://oneworldrental.com/">
-                <img src="/products/15year-logo.png" alt="Partner Logo" className="object-contain h-full w-full" />
+                <img src="/products/owr.png" alt="Partner Logo" className="object-contain h-full w-full" />
               </a>
             </div>
           </div>
 
           <CartButton />
-        </div>
-
-        {/* Mobile version with stacked layout */}
-        <div className="flex md:hidden items-center justify-center gap-2 mt-3 pt-3 border-t border-border/20">
-          <CheckCircle className="w-4 h-4 text-primary" />
-          <span className="text-xs font-medium text-muted-foreground">
-            One World Rental
-          </span>
         </div>
       </div>
     </header>

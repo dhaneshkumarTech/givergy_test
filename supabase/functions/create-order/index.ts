@@ -126,8 +126,8 @@ serve(async (req) => {
           },
         ],
         mode: 'payment',
-        success_url: `'http://localhost:8080'}/payment-success?order_id=${order.id}`,
-        cancel_url: `'http://localhost:8080'}/checkout`,
+        success_url: `http://localhost:8080/payment-success?order_id=${order.id}`,
+        cancel_url: `http://localhost:8080/checkout`,
         metadata: {
           order_id: order.id,
           order_number: orderNumber

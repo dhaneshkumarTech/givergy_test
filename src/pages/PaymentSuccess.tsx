@@ -145,11 +145,11 @@ const PaymentSuccess = () => {
             Thank You – {orderDetails.customer_name}!
           </h1>
           
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-md">
             <p className="text-foreground/90">
               Your Order with ID: <span className="font-mono font-semibold text-primary text-xs">{orderDetails.order_number}</span> has been placed successfully.
             </p>
-            <p className="text-muted-foreground text-xs">
+            <p className="text-muted-foreground text-md">
               Our team will be in touch shortly with a confirmation email sent to{' '}
               <span className="font-semibold text-primary">{orderDetails.customer_email}</span>.
             </p>
@@ -171,8 +171,8 @@ const PaymentSuccess = () => {
               </div>
               <p className="text-xs leading-relaxed">
                 Contact our team at{' '}
-                <a href="mailto:dev.test@gmail.com" className="font-semibold text-primary hover:underline">
-                  dev.test@gmail.com
+                <a href="mailto:sales@oneworlrental.com" className="font-semibold text-primary hover:underline">
+                  sales@oneworlrental.com
                 </a>{' '}
                 with the last 4 digits of your Order ID{' '}
                 <span className="font-mono bg-muted px-1 py-0.5 rounded text-xs">
@@ -196,9 +196,7 @@ const PaymentSuccess = () => {
               </div>
               <p className="text-xs leading-relaxed">
                 If you require any assistance, please call{' '}
-                <a href="tel:+1234567890" className="font-semibold text-secondary hover:underline">
-                  +1 (234) 567-8900
-                </a>{' '}
+                <a href="tel:+1 602 737 0011" className="font-semibold text-secondary hover:underline">+1 (602) 737-0011</a>{' '}
                 and mention the last 4 digits of your Order ID{' '}
                 <span className="font-mono bg-muted px-1 py-0.5 rounded text-xs">
                   {orderDetails.order_number.slice(-4)}
