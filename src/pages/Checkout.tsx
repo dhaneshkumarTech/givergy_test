@@ -309,7 +309,7 @@ const Checkout = () => {
                   <Button 
                     onClick={processPayment}
                     disabled={processingPayment}
-                    className="gap-2 bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all duration-300 transform hover:-translate-y-1"
+                    className="gap-2 bg-gradient-brand text-primary-foreground shadow-lg hover:shadow-glow transition-all"
                   >
                     {processingPayment ? (
                       <>Processing...</>
