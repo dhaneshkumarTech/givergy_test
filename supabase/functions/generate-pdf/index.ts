@@ -46,17 +46,34 @@ serve(async (req) => {
 
     // Generate HTML content for PDF
     const htmlContent = generateHTMLContent(order, type);
-
-    return new Response(
-      JSON.stringify({
-        html: htmlContent,
-        filename: `${type}_${order.order_number}.html`
-      }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    
+    // Try to generate PDF, fallback to HTML if PDF service unavailable
+    const pdfResult = await generatePDF(htmlContent, `${type}_${order.order_number}.pdf`);
+    
+    if (pdfResult.success && pdfResult.contentType === 'application/pdf') {
+      // Return PDF as binary data
+      return new Response(pdfResult.data, {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/pdf',
+          'Content-Disposition': `attachment; filename="${pdfResult.filename}"`
+        },
         status: 200,
-      }
-    );
+      });
+    } else {
+      // Fallback to HTML
+      return new Response(
+        JSON.stringify({
+          html: htmlContent,
+          filename: pdfResult.filename,
+          error: pdfResult.error || 'PDF service unavailable, returning HTML'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      );
+    }
   } catch (error) {
     console.error('Error generating PDF:', error);
     return new Response(
@@ -70,390 +87,345 @@ serve(async (req) => {
 });
 
 function generateHTMLContent(order: any, type: string) {
-  const title = type === 'quote' ? 'RENTAL QUOTE' : 'RECEIPT';
-  const statusInfo = type === 'quote' ? 'Quote Valid for 30 Days' : `Payment Received - ${new Date().toLocaleDateString()}`;
-  const brandColor = '#0ea5e9';
-
+  const title = type === 'quote' ? 'QUOTE' : 'RECEIPT';
+  const documentType = type === 'quote' ? 'quote' : 'receipt';
+  
   return `
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${title} - ${order.order_number}</title>
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-        
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body { 
-          font-family: 'Inter', Arial, sans-serif; 
-          line-height: 1.6; 
-          color: #1f2937; 
-          background: #ffffff;
+          font-family: Arial, sans-serif; 
+          font-size: 12px;
+          line-height: 1.4;
+          color: #000;
+          background: #fff;
+          margin: 0;
+          padding: 0;
+        }
+        
+        .document {
+          width: 100%;
           max-width: 800px;
           margin: 0 auto;
-          padding: 40px;
-        }
-        
-        .header { 
-          background: linear-gradient(135deg, ${brandColor} 0%, #0284c7 100%);
-          color: white;
-          padding: 40px 30px;
-          border-radius: 12px;
-          text-align: center; 
-          margin-bottom: 40px;
-          box-shadow: 0 10px 30px -10px rgba(14, 165, 233, 0.3);
-        }
-        
-        .company-name { 
-          font-size: 32px; 
-          font-weight: 700; 
-          margin-bottom: 8px;
-          letter-spacing: -0.5px;
-        }
-        
-        .document-title { 
-          font-size: 24px; 
-          font-weight: 600; 
-          margin: 12px 0 8px 0;
-          opacity: 0.95;
-        }
-        
-        .status-info {
-          font-size: 16px;
-          opacity: 0.9;
-          font-weight: 500;
-        }
-        
-        .content-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 30px;
-          margin-bottom: 40px;
-        }
-        
-        .order-info, .customer-info { 
-          background: #f8fafc; 
-          padding: 24px; 
-          border-radius: 12px; 
-          border-left: 4px solid ${brandColor};
-        }
-        
-        .section-title {
-          font-size: 18px;
-          font-weight: 600;
-          color: #374151;
-          margin-bottom: 16px;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-        }
-        
-        .section-title::before {
-          content: '';
-          width: 6px;
-          height: 6px;
-          background: ${brandColor};
-          border-radius: 50%;
-        }
-        
-        .info-row {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 8px 0;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        
-        .info-row:last-child {
-          border-bottom: none;
-        }
-        
-        .info-label {
-          font-weight: 500;
-          color: #6b7280;
-          font-size: 14px;
-        }
-        
-        .info-value {
-          font-weight: 600;
-          color: #111827;
-          text-align: right;
-        }
-        
-        .items-section {
-          margin: 40px 0;
-        }
-        
-        .items-table { 
-          width: 100%; 
-          border-collapse: collapse; 
-          border-radius: 12px;
-          overflow: hidden;
-          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-        
-        .items-table th { 
-          background: ${brandColor}; 
-          color: white;
-          padding: 16px 20px; 
-          text-align: left;
-          font-weight: 600;
-          font-size: 14px;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        
-        .items-table td { 
-          padding: 16px 20px; 
-          border-bottom: 1px solid #e5e7eb;
           background: white;
         }
         
-        .items-table tr:last-child td {
-          border-bottom: none;
+        .header {
+          background: #1e90ff;
+          color: white;
+          text-align: center;
+          padding: 15px;
         }
         
-        .items-table tr:nth-child(even) td {
-          background: #f9fafb;
+        .company-title {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 5px;
         }
         
-        .product-name {
-          font-weight: 600;
-          color: #111827;
+        .regions {
+          font-size: 12px;
+          margin-bottom: 10px;
         }
         
-        .price-cell {
-          font-weight: 600;
-          color: ${brandColor};
-          text-align: right;
-        }
-        
-        .total-section { 
-          background: #f8fafc;
-          padding: 24px;
-          border-radius: 12px;
-          margin-top: 40px;
-          border: 2px solid #e5e7eb;
-        }
-        
-        .total-row { 
+        .document-info {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 8px 0;
-          font-size: 16px;
-        }
-        
-        .total-label {
-          font-weight: 500;
-          color: #6b7280;
-        }
-        
-        .total-value {
-          font-weight: 600;
-          color: #111827;
-        }
-        
-        .grand-total { 
-          border-top: 2px solid ${brandColor};
-          padding-top: 16px;
-          margin-top: 16px;
-          font-size: 20px; 
-          font-weight: 700; 
-          color: ${brandColor};
-        }
-        
-        .notes-section {
-          background: #fefce8;
-          border: 1px solid #fde047;
-          border-radius: 12px;
-          padding: 20px;
-          margin: 30px 0;
-        }
-        
-        .notes-title {
-          font-weight: 600;
-          color: #a16207;
-          margin-bottom: 8px;
-        }
-        
-        .notes-content {
-          color: #a16207;
-          line-height: 1.6;
-        }
-        
-        .footer { 
-          background: #111827;
+          background: #1e90ff;
           color: white;
-          padding: 30px;
-          border-radius: 12px;
+          padding: 10px 15px;
+          font-weight: bold;
+        }
+        
+        .main-content {
+          border: 2px solid #1e90ff;
+        }
+        
+        .details-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border-bottom: 1px solid #000;
+        }
+        
+        .details-section {
+          border-right: 1px solid #000;
+          padding: 10px;
+        }
+        
+        .details-section:last-child {
+          border-right: none;
+        }
+        
+        .section-header {
+          background: #f0f0f0;
+          font-weight: bold;
+          padding: 5px;
+          border-bottom: 1px solid #000;
+          margin: -10px -10px 10px -10px;
+        }
+        
+        .detail-row {
+          margin-bottom: 5px;
+        }
+        
+        .detail-label {
+          font-weight: bold;
+          display: inline-block;
+          width: 120px;
+        }
+        
+        .customer-notes-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          border-bottom: 1px solid #000;
+        }
+        
+        .items-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 0;
+        }
+        
+        .items-table th {
+          background: #1e90ff;
+          color: white;
+          padding: 10px;
           text-align: center;
-          margin-top: 50px;
+          font-weight: bold;
+          border: 1px solid #000;
         }
         
-        .footer-title {
-          font-size: 20px;
-          font-weight: 600;
-          margin-bottom: 12px;
+        .items-table td {
+          padding: 8px 10px;
+          border: 1px solid #000;
+          text-align: center;
         }
         
-        .footer-contact {
-          opacity: 0.8;
+        .items-table td:first-child {
+          text-align: left;
+        }
+        
+        .items-table td:last-child {
+          text-align: right;
+          font-weight: bold;
+        }
+        
+        .total-row {
+          background: #f0f0f0;
+          font-weight: bold;
+        }
+        
+        .grand-total {
+          background: #1e90ff;
+          color: white;
           font-size: 14px;
-          line-height: 1.8;
         }
         
-        .terms {
-          background: #f1f5f9;
-          padding: 20px;
-          border-radius: 8px;
-          margin: 30px 0;
-          font-size: 12px;
-          color: #64748b;
-          line-height: 1.6;
+        .footer-note {
+          text-align: center;
+          padding: 10px;
+          font-style: italic;
+          border-top: 1px solid #000;
         }
         
         @media print {
-          body { margin: 0; padding: 20px; }
-          .header { background: ${brandColor} !important; }
+          body { margin: 0; }
+          .document { max-width: none; }
         }
       </style>
     </head>
     <body>
-      <div class="header">
-        <div class="company-name">🏗️ Equipment Rental Pro</div>
-        <div class="document-title">${title}</div>
-        <div class="status-info">${statusInfo}</div>
-      </div>
-
-      <div class="content-grid">
-        <div class="order-info">
-          <div class="section-title">Order Details</div>
-          <div class="info-row">
-            <span class="info-label">${title} Number</span>
-            <span class="info-value">${order.order_number}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Date Created</span>
-            <span class="info-value">${new Date(order.created_at).toLocaleDateString('en-US', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Event Start</span>
-            <span class="info-value">${order.event_start_date || 'TBD'}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Event End</span>
-            <span class="info-value">${order.event_end_date || 'TBD'}</span>
-          </div>
+      <div class="document">
+        <div class="header">
+          <div class="company-title">Global Event Technology Solutions Partner • hire@oneworldrental.com</div>
+          <div class="regions">UK • USA • CANADA • EUROPE • UAE • SINGAPORE • AUSTRALIA</div>
         </div>
-
-        <div class="customer-info">
-          <div class="section-title">Customer Information</div>
-          <div class="info-row">
-            <span class="info-label">Name</span>
-            <span class="info-value">${order.customer_name}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Company</span>
-            <span class="info-value">${order.company_name}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Email</span>
-            <span class="info-value">${order.customer_email}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Phone</span>
-            <span class="info-value">${order.customer_phone}</span>
-          </div>
-          <div class="info-row">
-            <span class="info-label">Event</span>
-            <span class="info-value">${order.event_name}</span>
-          </div>
-          ${order.shipping_address ? `
-            <div class="info-row">
-              <span class="info-label">Address</span>
-              <span class="info-value">${order.shipping_address}</span>
+        
+        <div class="document-info">
+          <span>${title}</span>
+          <span>Generated on: ${new Date().toLocaleDateString('en-CA')}</span>
+        </div>
+        
+        <div class="main-content">
+          <div class="details-grid">
+            <div class="details-section">
+              <div class="section-header">EVENT DETAILS</div>
+              <div class="detail-row">
+                <span class="detail-label">Rental Start Date:</span>
+                <span>${order.event_start_date || 'TBD'}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Rental End Date:</span>
+                <span>${order.event_end_date || 'TBD'}</span>
+              </div>
             </div>
-          ` : ''}
-        </div>
-      </div>
-
-      <div class="items-section">
-        <table class="items-table">
-          <thead>
-            <tr>
-              <th style="width: 50%;">Equipment Item</th>
-              <th style="width: 20%; text-align: right;">Unit Price</th>
-              <th style="width: 15%; text-align: center;">Qty</th>
-              <th style="width: 15%; text-align: right;">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${(order.order_items || []).map((item: any) => `
+            
+            <div class="details-section">
+              <div class="section-header">CONTACT BRANCH</div>
+              <div class="detail-row">One World Rental USA Inc,</div>
+              <div class="detail-row">85 Horsehill Road, Cedar Knolls,</div>
+              <div class="detail-row">NJ 07927, USA</div>
+              <br>
+              <div class="detail-row">Tel: +1 602 737 0011</div>
+              <div class="detail-row">E-Mail: givergy@oneworldrental.com</div>
+            </div>
+          </div>
+          
+          <div class="customer-notes-grid">
+            <div class="details-section">
+              <div class="section-header">CUSTOMER DETAILS</div>
+              <div class="detail-row">
+                <span class="detail-label">Name:</span>
+                <span>${order.customer_name}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Company:</span>
+                <span>${order.company_name}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Email:</span>
+                <span>${order.customer_email}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Phone:</span>
+                <span>${order.customer_phone}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Event:</span>
+                <span>${order.event_name}</span>
+              </div>
+              ${order.shipping_address ? `
+                <div class="detail-row">
+                  <span class="detail-label">Address:</span>
+                  <span>${order.shipping_address}</span>
+                </div>
+              ` : ''}
+            </div>
+            
+            <div class="details-section">
+              <div class="section-header">${title} NOTES</div>
+              <div>${order.message || 'Chargers and cables will be included with the order.'}</div>
+            </div>
+          </div>
+          
+          <table class="items-table">
+            <thead>
               <tr>
-                <td class="product-name">${item.product_title || 'Unknown Item'}</td>
-                <td class="price-cell">$${Number(item.product_price || 0).toFixed(2)}</td>
-                <td style="text-align: center; font-weight: 600;">${item.quantity || 0}</td>
-                <td class="price-cell">$${Number(item.line_total || 0).toFixed(2)}</td>
+                <th style="width: 50%;">Description</th>
+                <th style="width: 15%;">Quantity</th>
+                <th style="width: 15%;">Price</th>
+                <th style="width: 20%;">Subtotal</th>
               </tr>
-            `).join('')}
-            ${(!order.order_items || order.order_items.length === 0) ? `
-              <tr>
-                <td class="product-name" colspan="4" style="text-align: center; color: #6b7280; font-style: italic;">No items found</td>
+            </thead>
+            <tbody>
+              ${(order.order_items || []).map((item: any) => `
+                <tr>
+                  <td>${item.product_title || 'Unknown Item'}</td>
+                  <td>${item.quantity || 0}</td>
+                  <td>$${Number(item.product_price || 0).toFixed(2)}</td>
+                  <td>$${Number(item.line_total || 0).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+              ${(!order.order_items || order.order_items.length === 0) ? `
+                <tr>
+                  <td colspan="4" style="text-align: center; font-style: italic;">No items found</td>
+                </tr>
+              ` : ''}
+              <tr class="total-row">
+                <td colspan="3">Delivery & Setup:</td>
+                <td>$${Number(order.shipping_cost || 0).toFixed(2)}</td>
               </tr>
-            ` : ''}
-          </tbody>
-        </table>
-      </div>
-
-      <div class="total-section">
-        <div class="total-row">
-          <span class="total-label">Subtotal</span>
-          <span class="total-value">$${Number(order.subtotal).toFixed(2)}</span>
-        </div>
-        <div class="total-row">
-          <span class="total-label">Delivery & Setup</span>
-          <span class="total-value">$${Number(order.shipping_cost).toFixed(2)}</span>
-        </div>
-        <div class="total-row">
-          <span class="total-label">Pickup & Collection</span>
-          <span class="total-value">$${Number(order.collection_cost).toFixed(2)}</span>
-        </div>
-        <div class="total-row grand-total">
-          <span>TOTAL AMOUNT</span>
-          <span>$${Number(order.total_amount).toFixed(2)}</span>
-        </div>
-      </div>
-
-      ${order.message ? `
-        <div class="notes-section">
-          <div class="notes-title">📝 Special Instructions</div>
-          <div class="notes-content">${order.message}</div>
-        </div>
-      ` : ''}
-
-      <div class="terms">
-        <strong>Terms & Conditions:</strong> All equipment rentals include delivery, setup, and collection. Damage waivers available upon request. 
-        Payment is due upon delivery unless other arrangements have been made. Cancellations must be made 48 hours in advance.
-        Equipment must be returned in the same condition as delivered.
-      </div>
-
-      <div class="footer">
-        <div class="footer-title">Thank You for Your Business! 🙏</div>
-        <div class="footer-contact">
-          Equipment Rental Pro<br>
-          📧 contact@equipmentrentalpro.com<br>
-          📞 (555) 123-4567<br>
-          🌐 www.equipmentrentalpro.com
+              <tr class="total-row">
+                <td colspan="3">Pickup & Collection:</td>
+                <td>$${Number(order.collection_cost || 0).toFixed(2)}</td>
+              </tr>
+              <tr class="grand-total">
+                <td colspan="3">Total Estimated Cost:</td>
+                <td>$${Number(order.total_amount || 0).toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="footer-note">
+            *Chargers and cables will be included with the order.
+          </div>
         </div>
       </div>
     </body>
     </html>
   `;
+}
+
+// Function to convert HTML to PDF using a service
+async function generatePDF(htmlContent: string, filename: string) {
+  try {
+    // Use htmlcsstoimage.com API for HTML to PDF conversion
+    const apiKey = Deno.env.get('HTMLCSSTOIMAGE_API_KEY');
+    
+    if (!apiKey) {
+      // Fallback to HTML if no PDF service configured
+      console.log('No PDF service configured, returning HTML');
+      return {
+        success: true,
+        data: htmlContent,
+        filename: filename.replace('.pdf', '.html'),
+        contentType: 'text/html'
+      };
+    }
+
+    const response = await fetch('https://hcti.io/v1/image', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${btoa(apiKey + ':')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        html: htmlContent,
+        css: '',
+        google_fonts: 'Arial',
+        format: 'pdf',
+        viewport_width: 800,
+        viewport_height: 1200,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`PDF service error: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.url) {
+      // Download the PDF
+      const pdfResponse = await fetch(result.url);
+      const pdfBuffer = await pdfResponse.arrayBuffer();
+      
+      return {
+        success: true,
+        data: pdfBuffer,
+        filename: filename,
+        contentType: 'application/pdf'
+      };
+    } else {
+      throw new Error('PDF generation failed');
+    }
+  } catch (error) {
+    console.error('PDF generation error:', error);
+    // Fallback to HTML
+    return {
+      success: false,
+      data: htmlContent,
+      filename: filename.replace('.pdf', '.html'),
+      contentType: 'text/html',
+      error: error.message
+    };
+  }
 }
