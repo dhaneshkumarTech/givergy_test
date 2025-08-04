@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { orderId, type } = await req.json(); // type: 'quote' or 'receipt'
+    const { orderId, type } = await req.json(); 
     
     console.log('Generating PDF for order:', orderId, 'type:', type);
 
@@ -21,7 +21,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Get order details
     const { data: order, error: orderError } = await supabase
       .from('orders')
       .select(`
@@ -45,13 +44,9 @@ serve(async (req) => {
       throw new Error('Order not found');
     }
 
-    console.log('Order data:', JSON.stringify(order, null, 2));
-
     // Generate HTML content for PDF
     const htmlContent = generateHTMLContent(order, type);
 
-    // For demo purposes, we'll return the HTML content
-    // In production, you'd use a PDF generation service like Puppeteer
     return new Response(
       JSON.stringify({
         html: htmlContent,

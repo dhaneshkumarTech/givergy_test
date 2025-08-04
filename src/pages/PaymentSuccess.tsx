@@ -24,6 +24,7 @@ interface OrderDetails {
 }
 
 const PaymentSuccess = () => {
+  console.log('PaymentSuccess component rendered');
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [generatingReceipt, setGeneratingReceipt] = useState(false);
@@ -32,9 +33,7 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
-      console.log('Fetching order details...');
       const orderId = searchParams.get('order_id');
-      console.log('Fetching order details for ID:', orderId);
       if (!orderId) {
         toast.error('No order ID found');
         navigate('/');
@@ -78,7 +77,6 @@ const PaymentSuccess = () => {
       
       if (error) throw error;
       
-      // Create and download the receipt file
       const blob = new Blob([data.html], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');

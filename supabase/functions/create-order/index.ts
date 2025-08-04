@@ -107,13 +107,11 @@ serve(async (req) => {
       throw itemsError;
     }
 
-    // Only create Stripe session for actual orders, not quotes
     if (!isQuoteOnly) {
       const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
         apiVersion: '2023-10-16'
       });
 
-      // Create Stripe checkout session
       const session = await stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         line_items: [
@@ -124,14 +122,14 @@ serve(async (req) => {
                 name: `Order ${orderNumber}`,
                 description: `Equipment rental for ${customerData.event_name}`,
               },
-              unit_amount: Math.round(totalAmount * 100), // Convert to cents
+              unit_amount: Math.round(totalAmount * 100), 
             },
             quantity: 1,
           },
         ],
         mode: 'payment',
-        success_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:3000'}/payment-success?order_id=${order.id}`,
-        cancel_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:3000'}/checkout`,
+        success_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:8080'}/payment-success?order_id=${order.id}`,
+        cancel_url: `${Deno.env.get('SUPABASE_URL')?.replace('supabase.co', 'lovableproject.com') || 'http://localhost:8080'}/checkout`,
         metadata: {
           order_id: order.id,
           order_number: orderNumber

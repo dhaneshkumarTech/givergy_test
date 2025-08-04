@@ -109,7 +109,7 @@ const Checkout = () => {
     };
 
     fetchShippingAndAddress();
-  }, [zipCode, calculateShipping, getAddress, form]);
+  }, [zipCode]);
 
   const subtotal = getTotalPrice();
   const totalShipping = shippingCost ? shippingCost.shipping_cost + shippingCost.collection_cost : 0;
@@ -121,19 +121,14 @@ const Checkout = () => {
     try {
       let orderId = orderCreated?.order_id;
       
-      // If no order exists yet, create a temporary one for quote generation
       if (!orderId) {
         if (!shippingCost) {
           toast.error('Please enter a valid ZIP code to calculate shipping');
           return;
         }
         
-        // Validate required form fields
         const formData = form.getValues();
-        if (!formData.name || !formData.email || !formData.phone || !formData.company || !formData.event_name) {
-          toast.error('Please fill in all required fields to generate a quote');
-          return;
-        }
+
         
         const tempOrderData = {
           customerData: {
@@ -195,7 +190,6 @@ const Checkout = () => {
     
     setProcessingPayment(true);
     try {
-      // Redirect to Stripe checkout
       if (orderCreated.checkout_url) {
         window.location.href = orderCreated.checkout_url;
       } else {
